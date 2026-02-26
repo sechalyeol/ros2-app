@@ -612,7 +612,7 @@ function render(){
       tabContent=(p.co||[]).map((c,i)=>`<div class="concept">
         <div class="concept-idx">CONCEPT ${i+1} / ${p.co.length}</div>
         <div class="concept-title">${esc(c.t)}</div>
-        <div class="concept-body">${nl2br(c.b)}</div>
+        <div class="concept-body">${linkTerms(c.b)}</div>
       </div>`).join("")||'<div class="empty">이론 설명이 준비 중입니다</div>';
     }else{
       // Quiz tab
