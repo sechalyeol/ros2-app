@@ -115,24 +115,15 @@ code{font-family:'SF Mono','Menlo',monospace}
 /* Safe area bottom */
 .safe-bottom{padding-bottom:env(safe-area-inset-bottom,0)}
 
-/* Term Popup Modal */
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
-.modal-overlay.show{opacity:1;pointer-events:auto}
-.modal-box{background:var(–s);border:1px solid var(–b);border-radius:16px 16px 0 0;width:100%;max-width:720px;max-height:75vh;overflow-y:auto;padding:20px 16px 28px;transform:translateY(100%);transition:transform .25s ease-out;-webkit-overflow-scrolling:touch}
-.modal-overlay.show .modal-box{transform:translateY(0)}
-.modal-handle{width:36px;height:4px;background:var(–b);border-radius:2px;margin:0 auto 14px}
-.modal-close{position:absolute;top:16px;right:16px;background:var(–b);border:none;color:var(–td);width:28px;height:28px;border-radius:50%;font-size:14px;display:flex;align-items:center;justify-content:center}
+/* Term Popup */
+#tpOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);z-index:9999;display:none;align-items:flex-end;justify-content:center}
+#tpOverlay.open{display:flex}
+#tpBox{background:#111827;border:1px solid #1e293b;border-radius:16px 16px 0 0;width:100%;max-width:720px;max-height:75vh;overflow-y:auto;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0));-webkit-overflow-scrolling:touch}
 </style>
 
 </head>
 <body>
 <div class="app" id="app"></div>
-<div class="modal-overlay" id="termModal" onclick="closeTermPopup(event)">
-<div class="modal-box" onclick="event.stopPropagation()">
-<div class="modal-handle"></div>
-<div id="termModalContent"></div>
-</div>
-</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
@@ -457,28 +448,35 @@ function getFiltered(){
 }
 
 // ── TERM POPUP ──
-function showTermPopup(termName){
-  const v=G[termName];if(!v)return;
-  const ct=CATS[v.c];
-  const bt=BT[termName];
-  const mc=document.getElementById("termModalContent");
-  mc.innerHTML=`
-    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px">
-      <span class="tc-badge" style="color:${ct.c};background:${ct.c}18;font-size:10px">${ct.i}${ct.l}</span>
-      <span class="tc-badge" style="color:${DC(v.d)};background:${DC(v.d)}18;font-size:10px">${DL(v.d)}</span>
-    </div>
-    <div style="font-size:17px;font-weight:800;margin-bottom:4px">${esc(termName)}</div>
-    <div style="font-size:12px;color:var(--td);margin-bottom:12px">${esc(v.s)}</div>
-    ${bt?`<div style="margin-bottom:12px;padding:8px 10px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:7px;font-size:11.5px;line-height:1.7;color:#86efac"><span style="font-weight:700">🔰 쉬운 말로</span>&nbsp;&nbsp;${esc(bt)}</div>`:""}
-    <div style="font-size:12px;line-height:1.85;color:var(--td);white-space:pre-line">${nl2br(v.f)}</div>
-    ${v.r&&v.r.length?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px;align-items:center"><span style="font-size:10px;color:var(--tm)">연관:</span>${v.r.map(r=>`<span class="tc-ref" onclick="event.stopPropagation();showTermPopup('${esc(r)}')">${esc(r)}</span>`).join("")}</div>`:""}
-    <button onclick="closeTermPopup()" style="margin-top:16px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--b);background:var(--bg);color:var(--td);font-size:12px;font-family:inherit">닫기</button>
-  `;
-  document.getElementById("termModal").classList.add("show");
+function ensurePopup(){
+  if(document.getElementById("tpOverlay"))return;
+  const ov=document.createElement("div");
+  ov.id="tpOverlay";
+  ov.onclick=function(e){if(e.target===ov)closeTP();};
+  ov.innerHTML='<div id="tpBox"></div>';
+  document.body.appendChild(ov);
 }
-function closeTermPopup(e){
-  if(e&&e.target!==document.getElementById("termModal"))return;
-  document.getElementById("termModal").classList.remove("show");
+function showTP(t){
+  const v=G[t];if(!v)return;
+  ensurePopup();
+  const ct=CATS[v.c];const bt=BT[t];
+  document.getElementById("tpBox").innerHTML=
+    '<div style="width:36px;height:4px;background:#1e293b;border-radius:2px;margin:0 auto 14px"></div>'+
+    '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">'+
+      '<span style="font-size:10px;font-family:monospace;padding:1px 5px;border-radius:3px;color:'+ct.c+';background:'+ct.c+'18">'+ct.i+ct.l+'</span>'+
+      '<span style="font-size:10px;font-family:monospace;padding:1px 5px;border-radius:3px;color:'+DC(v.d)+';background:'+DC(v.d)+'18">'+DL(v.d)+'</span>'+
+    '</div>'+
+    '<div style="font-size:17px;font-weight:800;margin-bottom:4px">'+esc(t)+'</div>'+
+    '<div style="font-size:12px;color:#94a3b8;margin-bottom:12px">'+esc(v.s)+'</div>'+
+    (bt?'<div style="margin-bottom:12px;padding:8px 10px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:7px;font-size:11.5px;line-height:1.7;color:#86efac"><b>🔰 쉬운 말로</b>&nbsp;&nbsp;'+esc(bt)+'</div>':'')+
+    '<div style="font-size:12px;line-height:1.85;color:#94a3b8;white-space:pre-line">'+nl2br(v.f)+'</div>'+
+    (v.r&&v.r.length?'<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px;align-items:center"><span style="font-size:10px;color:#64748b">연관:</span>'+v.r.map(function(r){return '<span style="font-size:10px;color:#06b6d4;background:rgba(6,182,212,0.12);padding:1px 6px;border-radius:3px;cursor:pointer" onclick="event.stopPropagation();showTP(\''+esc(r)+'\')">'+esc(r)+'</span>';}).join('')+'</div>':'')+
+    '<button onclick="closeTP()" style="margin-top:16px;width:100%;padding:10px;border-radius:8px;border:1px solid #1e293b;background:#0b0f19;color:#94a3b8;font-size:12px;font-family:inherit;cursor:pointer">닫기</button>';
+  document.getElementById("tpOverlay").classList.add("open");
+}
+function closeTP(){
+  var ov=document.getElementById("tpOverlay");
+  if(ov)ov.classList.remove("open");
 }
 
 // ── RENDER HELPERS ──
@@ -489,7 +487,7 @@ function linkTerms(text){
   termKeys.forEach(tk=>{
     const escaped=esc(tk).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const regex=new RegExp('(?<![\\w가-힣])'+escaped+'(?![\\w가-힣])','g');
-    html=html.replace(regex,`<span style="color:var(--ac);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:pointer" onclick="event.stopPropagation();showTermPopup('${esc(tk)}')">${esc(tk)}</span>`);
+    html=html.replace(regex,`<span style="color:var(--ac);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:pointer" onclick="event.stopPropagation();showTP('${esc(tk)}')">${esc(tk)}</span>`);
   });
   return html;
 }
@@ -507,7 +505,7 @@ function termCard(k,v,open){
   <div class="tc-short">${esc(v.s)}</div>
   ${open?`${bt?`<div style="margin-top:8px;padding:8px 10px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:7px;font-size:11.5px;line-height:1.7;color:#86efac"><span style="font-weight:700">🔰 쉬운 말로</span>&nbsp;&nbsp;${esc(bt)}</div>`:""}
   <div class="tc-detail">${linkTerms(v.f)}</div>
-  ${v.r&&v.r.length?`<div class="tc-refs"><span style="font-size:10px;color:var(--tm)">연관:</span>${v.r.map(r=>`<span class="tc-ref" onclick="event.stopPropagation();showTermPopup('${esc(r)}')">${esc(r)}</span>`).join("")}</div>`:""}`:""}
+  ${v.r&&v.r.length?`<div class="tc-refs"><span style="font-size:10px;color:var(--tm)">연관:</span>${v.r.map(r=>`<span class="tc-ref" onclick="event.stopPropagation();showTP('${esc(r)}')">${esc(r)}</span>`).join("")}</div>`:""}`:""}
   </div>`;
 }
 
