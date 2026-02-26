@@ -371,7 +371,7 @@ const S={v:"home",part:null,tab:"terms",exp:{},done:{},sq:"",gf:"all",df:0,fc:0,
 quiz:null,qLoad:false,qErr:null,qa:{},qSub:false,qCnt:5,qDiff:1,qScore:null,apiShow:false};
 
 let _apiKey="";
-try{_apiKey=localStorage.getItem("ros2_api_key")||"AIzaSyDN3xXsy-__kS81Z6BE4wz77iGTPMw4Gmg";}catch(e){_apiKey="AIzaSyDxv9pclPSYvM-bl1fxPC3bd-1zEfTYW8Y";}
+try{_apiKey=localStorage.getItem("ros2_api_key")||"";}catch(e){_apiKey="";}
 
 function go(upd){Object.assign(S,upd);render();}
 function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML;}
@@ -379,7 +379,7 @@ function nl2br(s){return esc(s).replace(/\n/g,"<br>")}
 
 // ── QUIZ GENERATOR ──
 async function genQuiz(){
-  if(!_apiKey){alert("🔑 상단에서 Gemini API 키를 먼저 입력해주세요!");return;}
+  if(!_apiKey){S.apiShow=true;render();alert("🔑 Gemini API 키를 입력해주세요!\n\n처음 한번만 입력하면 자동 저장됩니다.\naistudio.google.com → Get API Key");return;}
   const p=PARTS.find(x=>x.id===S.part);if(!p)return;
   go({qLoad:true,qErr:null,quiz:null,qa:{},qSub:false,qScore:null});
   const dn=S.qDiff===1?"입문(기본 개념, 용어 정의)":S.qDiff===2?"중급(원리 이해, 비교 분석)":"심화(수식, 내부 동작, 응용)";
@@ -486,7 +486,7 @@ function render(){
       <button class="api-save" onclick="saveApiKey()">저장</button>
       <span class="api-ok" id="apiOk">✓</span>
     </div>
-    <div class="api-hint">AI 퀴즈 기능에 필요 (Gemini Flash) · 키는 브라우저에만 저장됩니다</div>
+    <div class="api-hint">AI 퀴즈에 필요 · aistudio.google.com → Get API Key에서 무료 발급 · 한번 입력하면 자동 저장됩니다</div>
   </div>`;
 
   // ── FLASHCARD ──
