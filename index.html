@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ROS 2 학습 도우미</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;font-size:14px}
+body{background:#0b0f19;color:#e2e8f0;font-family:'Pretendard',-apple-system,'Apple SD Gothic Neo','Segoe UI',sans-serif;overflow-x:hidden;min-height:100vh;min-height:100dvh}
+::-webkit-scrollbar{width:0;display:none}
+button{font-family:inherit;cursor:pointer;-webkit-appearance:none}
+input{font-family:inherit;-webkit-appearance:none}
+code{font-family:'SF Mono','Menlo',monospace}
+
+/* Colors */
+:root{--bg:#0b0f19;--s:#111827;--s2:#1a2332;--ac:#06b6d4;--acd:#0e7490;--acg:rgba(6,182,212,0.12);--g:#34d399;--gd:#065f46;--r:#f87171;--y:#fbbf24;--t:#e2e8f0;--td:#94a3b8;--tm:#64748b;--b:#1e293b;--cb:#0d1117}
+
+/* Layout */
+.app{min-height:100vh;min-height:100dvh}
+.hdr{background:linear-gradient(160deg,#0f172a,#0b1120,#0d1525);border-bottom:1px solid var(--b);padding:env(safe-area-inset-top,0) 0 0}
+.hdr-in{padding:20px 16px 16px;max-width:720px;margin:0 auto}
+.topbar{background:var(--s);border-bottom:1px solid var(--b);padding:10px 16px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:10}
+.content{max-width:720px;margin:0 auto;padding:12px 14px 80px}
+.tabs{background:var(--s);border-bottom:1px solid var(--b);display:flex;overflow-x:auto;padding:0 12px;position:sticky;top:44px;z-index:9;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+
+/* Buttons */
+.btn-back{background:none;border:1px solid var(--b);color:var(--td);border-radius:6px;padding:6px 10px;font-size:12px;flex-shrink:0}
+.btn-tag{padding:5px 10px;border-radius:6px;border:1px solid var(--b);background:none;color:var(--tm);font-size:11px;white-space:nowrap;transition:all .15s}
+.btn-tag.on{border-color:var(--ac);background:var(--acg);color:var(--ac);font-weight:600}
+.btn-pill{padding:8px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;color:#fff}
+
+/* Cards */
+.card{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:12px 14px;margin-bottom:6px;transition:border-color .15s}
+.card:active{border-color:var(--acd)}
+.part-card{display:flex;gap:10px;align-items:flex-start}
+.part-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+
+/* Term card */
+.tc-head{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tc-badge{font-size:9px;font-family:'SF Mono',monospace;padding:1px 5px;border-radius:3px}
+.tc-name{flex:1;font-size:13px;font-weight:600;min-width:0}
+.tc-arrow{color:var(--tm);font-size:10px;transition:transform .2s;flex-shrink:0}
+.tc-arrow.open{transform:rotate(180deg)}
+.tc-short{font-size:11px;color:var(--td);margin-top:3px;padding-left:0}
+.tc-detail{margin-top:10px;padding-top:10px;border-top:1px solid var(--b);font-size:12px;line-height:1.85;color:var(--td);white-space:pre-line}
+.tc-refs{margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.tc-ref{font-size:10px;color:var(--ac);background:var(--acg);padding:1px 6px;border-radius:3px}
+
+/* Concept card */
+.concept{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:16px;margin-bottom:14px}
+.concept-idx{font-size:9px;color:var(--ac);font-family:'SF Mono',monospace;letter-spacing:1.5px;margin-bottom:4px}
+.concept-title{font-size:15px;font-weight:700;margin-bottom:10px;line-height:1.4}
+.concept-body{font-size:12px;line-height:1.9;color:var(--td);white-space:pre-line}
+
+/* Quiz */
+.quiz-opt{display:block;background:var(--s);border:1px solid var(--b);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12px;color:var(--td);text-align:left;width:100%;transition:all .15s}
+.quiz-opt.sel{border-color:var(--ac);background:var(--acg);color:var(--ac)}
+.quiz-opt.correct{border-color:var(--g);background:rgba(52,211,153,.08);color:var(--g)}
+.quiz-opt.wrong{border-color:var(--r);background:rgba(248,113,113,.06);color:var(--r)}
+
+/* Flashcard */
+.fc-card{width:100%;min-height:240px;background:var(--s);border:1px solid var(--b);border-radius:14px;padding:24px 20px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;transition:border-color .2s}
+.fc-card.flipped{border-color:rgba(6,182,212,.4)}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{background:var(--s);border:1px solid var(--b);padding:6px 8px;text-align:left;color:var(--ac);font-weight:600;white-space:nowrap}
+.tbl td{border:1px solid var(--b);padding:6px 8px;color:var(--td)}
+.tbl td:first-child{color:var(--t);font-weight:600;white-space:nowrap}
+
+/* Cheat */
+.cheat-row{display:flex;border-bottom:1px solid var(--b);font-size:11px}
+.cheat-cmd{font-family:'SF Mono',monospace;color:#7dd3fc;padding:7px 10px;background:rgba(0,0,0,.2);min-width:0;flex:1;word-break:break-all}
+.cheat-desc{padding:7px 10px;color:var(--td);flex-shrink:0;white-space:nowrap}
+
+/* Grid */
+.tool-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:14px}
+.tool-btn{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:12px 10px;text-align:center}
+.tool-btn:active{border-color:var(--acd)}
+.tool-emoji{font-size:16px;margin-bottom:3px}
+.tool-label{font-size:11px;font-weight:600;color:var(--t)}
+.tool-sub{font-size:9px;color:var(--tm);font-family:'SF Mono',monospace;margin-top:2px}
+
+/* Progress */
+.prog-bar{height:4px;background:var(--b);border-radius:2px;overflow:hidden;margin-top:10px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--acd),var(--ac));border-radius:2px;transition:width .4s}
+
+/* Filter row */
+.filter-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+
+/* Search */
+.search{width:100%;padding:9px 12px;background:var(--s);border:1px solid var(--b);border-radius:8px;color:var(--t);font-size:13px;outline:none;margin-bottom:8px}
+.search:focus{border-color:var(--ac)}
+
+/* API bar */
+.api-bar{background:var(--s);border-bottom:1px solid var(--b);padding:10px 14px;display:none;flex-direction:column;gap:6px}
+.api-bar.show{display:flex}
+.api-row{display:flex;gap:6px;align-items:center}
+.api-input{flex:1;padding:7px 10px;background:var(--bg);border:1px solid var(--b);border-radius:6px;color:var(--t);font-size:12px;font-family:monospace;outline:none}
+.api-input:focus{border-color:var(--ac)}
+.api-save{background:var(--acd);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:600;flex-shrink:0}
+.api-hint{font-size:10px;color:var(--tm)}
+.api-ok{color:var(--g);font-size:11px;display:none}
+
+/* Misc */
+.tag-row{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.tag-sm{font-size:9px;color:var(--tm);background:var(--cb);padding:1px 5px;border-radius:3px;border:1px solid var(--b)}
+.empty{text-align:center;color:var(--tm);padding:40px 0}
+
+/* Safe area bottom */
+.safe-bottom{padding-bottom:env(safe-area-inset-bottom,0)}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  패스트캠퍼스 "ROS 2 & AI 자율주행 로봇 개발 올인원"
+//  강의 기반 자체학습 프로그램 v6 — 🔰초보자 친화 개선 · 순수 HTML/JS
+// ═══════════════════════════════════════════════════════════
+
+// ── DATA ──
+const CATS={core:{l:"핵심",c:"#22d3ee",i:"⚡"},hw:{l:"하드웨어",c:"#f97316",i:"🔧"},env:{l:"개발환경",c:"#a78bfa",i:"💻"},ros2:{l:"ROS 2",c:"#34d399",i:"🤖"},sim:{l:"시뮬레이션",c:"#fb923c",i:"🌍"},sensor:{l:"센서",c:"#60a5fa",i:"📡"},slam:{l:"SLAM",c:"#f472b6",i:"🗺️"},nav:{l:"네비게이션",c:"#fbbf24",i:"🧭"},ai:{l:"AI/딥러닝",c:"#c084fc",i:"🧠"},ctrl:{l:"제어",c:"#4ade80",i:"🎮"},math:{l:"수학기초",c:"#fb7185",i:"📐"}};
+const DL=d=>d===1?"입문":d===2?"중급":"심화";
+const DC=d=>d===1?"#34d399":d===2?"#fbbf24":"#f87171";
+
+const G={
+"ROS 2":{s:"Robot Operating System 2",f:"로봇 소프트웨어 개발을 위한 오픈소스 프레임워크.\n\n핵심 특징:\n• DDS(분산 통신 엔진) 기반 → 노드끼리 자동으로 서로를 찾아 연결\n• QoS(통신 품질 설정) → '꼭 도착' vs '빠르게' 선택 가능\n• 실시간성 지원 → 정해진 시간 안에 반드시 반응\n• SROS2(보안 기능) → 허가된 노드만 통신 가능\n• 멀티플랫폼 → Linux, Windows, macOS 모두 지원\n\nROS 1과의 핵심 차이:\n• Master 노드 제거 → SPOF(단일 장애점: 하나 죽으면 전체가 죽는 문제) 없는 분산 구조\n• DDS 미들웨어 → QoS, 보안, 노드 자동 발견 기능 내장\n• Lifecycle 노드 → 노드를 '준비→실행→정지' 단계로 체계적 관리\n• Component 노드 → 여러 노드를 한 프로세스에 합쳐서 성능 최적화",c:"core",d:1,r:["ROS 1","DDS","Lifecycle Node"]},
+"ROS 1":{s:"초기 Robot Operating System (2007~2020)",f:"ROS 2의 이전 버전입니다.\n\n핵심 한계:\n• Master(roscore) 필수: 중앙 관리 노드가 하나 있어야 동작. 이게 죽으면 전체 시스템이 멈춤 (이런 걸 SPOF=단일 장애점이라 함)\n• 실시간성 미지원: 정해진 시간 안에 반드시 반응하는 보장 없음\n• 보안 없음: 아무 노드나 통신 가능\n• Linux만 지원\n\n2020년 Noetic이 마지막 버전이며, 현재는 ROS 2로 전환 중입니다.",c:"core",d:1,r:["ROS 2"]},
+"모바일 로봇":{s:"이동 가능한 자율주행 로봇 플랫폼",f:"바퀴·트랙·다리 등으로 이동하는 로봇. 물류 AGV, 서빙·배달·순찰 로봇 등. 본 강의에서는 차동 구동 로봇 사용.",c:"hw",d:1,r:["차동 구동"]},
+"차동 구동":{s:"좌우 바퀴 속도 차로 회전하는 구동 방식",f:"좌·우 바퀴 속도 차이로 직진·회전 제어.\n• 같은 속도 → 직진  • 다른 속도 → 곡선  • 반대 방향 → 제자리 회전\n\n순기구학: v=(vR+vL)/2, ω=(vR-vL)/L",c:"hw",d:1,r:["기구학","오도메트리"]},
+"SBC":{s:"Single Board Computer — 단일 보드 컴퓨터",f:"하나의 보드에 CPU, RAM, I/O 통합. Raspberry Pi, Jetson 등. 로봇의 '두뇌'.",c:"hw",d:1,r:["Raspberry Pi","Jetson"]},
+"Raspberry Pi":{s:"대표적인 교육용 SBC",f:"ARM 기반 저가 SBC. Ubuntu+ROS 2 구동. GPIO로 하드웨어 직접 제어.",c:"hw",d:1,r:["SBC","GPIO"]},
+"Jetson":{s:"NVIDIA GPU 내장 AI 컴퓨팅 보드",f:"CUDA 코어 내장으로 TensorRT 딥러닝 실시간 추론 가능. AI 자율주행 로봇 최적.",c:"hw",d:1,r:["SBC","TensorRT"]},
+"피지컬 AI":{s:"물리 세계와 상호작용하는 AI",f:"센서→AI 판단→액추에이터 행동. 로봇 매니퓰레이션, 자율주행, 휴머노이드.",c:"ai",d:1,r:["LLM"]},
+"액추에이터":{s:"전기 신호→물리적 움직임 변환 장치",f:"DC 모터(바퀴), 서보 모터(관절), 스테퍼 모터(정밀 위치). cmd_vel → 모터 드라이버 → 액추에이터.",c:"hw",d:1,r:["모터 드라이버","PWM"]},
+"모터 드라이버":{s:"SBC 신호→모터 구동 전류 변환 회로",f:"L298N, TB6612FNG 등. GPIO/PWM 신호를 고전류로 변환·방향 제어.",c:"hw",d:1,r:["PWM","GPIO","ros2_control"]},
+"PWM":{s:"Pulse Width Modulation — 펄스 폭 변조",f:"듀티 사이클로 아날로그적 제어. 0%=정지, 50%=절반, 100%=최대. 서보 각도 제어에도 사용.",c:"hw",d:1,r:["모터 드라이버"]},
+"GPIO":{s:"General Purpose I/O — 범용 입출력 핀",f:"SBC 물리 핀으로 디지털 신호 입출력. LED, 모터 드라이버, 센서 통신.",c:"hw",d:1,r:["Raspberry Pi","PWM"]},
+"ros2_control":{s:"ROS 2 하드웨어 추상화 프레임워크",f:"모터·센서 등 하드웨어를 '추상화'(=표준 규격으로 감싸기)하여, 위쪽 프로그램(Nav2 등)이 하드웨어 종류를 몰라도 되게 합니다.\n\n구성요소:\n• Hardware Interface: 실제 모터/엔코더를 직접 제어하는 드라이버\n• Controller Manager: 아래 컨트롤러들을 관리하는 매니저\n• Controller: diff_drive_controller(차동 구동 제어기) 등\n\n왜 좋은가? (비유: USB 포트)\nUSB가 있으면 어떤 마우스든 꽂으면 바로 됨. ros2_control도 마찬가지:\n• 모터를 A사→B사로 교체해도 상위 프로그램 수정 불필요\n• 시뮬레이션↔실물 전환이 설정 파일만 바꾸면 가능",c:"hw",d:2,r:["차동 구동","cmd_vel"]},
+"Ubuntu":{s:"ROS 2 주요 지원 리눅스 배포판",f:"Humble→Ubuntu 22.04, Jazzy→24.04. SBC에 Server, 개발 PC에 Desktop 설치.",c:"env",d:1,r:["Linux","SSH"]},
+"Linux":{s:"오픈소스 운영체제 커널",f:"ROS 2 1차 지원 OS. 실시간 커널(PREEMPT-RT) 가능, 하드웨어 제어 유리.",c:"env",d:1,r:["Ubuntu"]},
+"SSH":{s:"Secure Shell — 원격 접속 프로토콜",f:"개발 PC→로봇 SBC 원격 접속. 'ssh user@ip'로 노드 실행·디버깅.",c:"env",d:1,r:["Ubuntu"]},
+"Python":{s:"ROS 2 주요 개발 언어 (rclpy)",f:"빠른 프로토타이핑, AI/ML 라이브러리 연동 장점. 본 강의 주 사용 언어.",c:"env",d:1,r:["rclpy"]},
+"C++":{s:"ROS 2 성능 크리티컬 언어 (rclcpp)",f:"Nav2, SLAM Toolbox 등 핵심 패키지가 C++. 실시간 제어, 고성능 처리.",c:"env",d:1,r:["rclcpp"]},
+"노드":{s:"ROS 2의 최소 실행 단위 프로세스",f:"특정 기능 수행하는 독립 프로세스. 토픽·서비스·액션으로 통신. 모듈화가 핵심.",c:"ros2",d:1,r:["Lifecycle Node","Component Node"]},
+"Lifecycle Node":{s:"상태 기반 노드 관리 체계",f:"일반 노드는 켜면 바로 실행되지만, Lifecycle 노드는 단계별로 관리됩니다.\n\n상태 흐름 (비유: 식당 오픈 과정):\n① Unconfigured (미설정) — 식당이 비어있는 상태\n  ↓ [configure: 메뉴·재료 준비]\n② Inactive (대기) — 준비 완료, 아직 영업 안 함\n  ↓ [activate: 영업 시작]\n③ Active (실행 중) — 손님 받는 중!\n  ↓ [deactivate: 영업 종료]\n④ 다시 Inactive → [cleanup] → Unconfigured → [shutdown] → Finalized(완전 종료)\n\n왜 필요한가?\n• Nav2의 모든 서버가 이 방식 사용\n• 여러 노드를 정해진 순서대로 초기화·종료 가능\n• 문제가 생기면 특정 노드만 재시작 가능",c:"ros2",d:2,r:["노드","Nav2"]},
+"Component Node":{s:"프로세스 내 노드 합성 (Composition)",f:"보통 노드는 각각 별도 프로그램(프로세스)으로 실행됩니다.\nComponent 노드는 여러 노드를 '하나의 프로그램 안에' 합쳐서 실행합니다.\n\n비유: 택배\n• 일반 노드: 물건마다 따로 택배 보냄 → 느리고 비쌈\n• Component 노드: 물건을 한 상자에 모아서 보냄 → 빠르고 효율적\n\n기술적 장점:\n• IPC(프로세스 간 통신) 오버헤드 제거\n• Zero-copy: 데이터를 복사하지 않고 직접 전달\n• 카메라 같은 대용량 데이터에서 성능 크게 향상",c:"ros2",d:3,r:["노드"]},
+"토픽":{s:"Pub-Sub 비동기 통신 채널",f:"Publisher→메시지 발행→모든 Subscriber 수신. 1:N, N:N 가능.\n대표: /cmd_vel, /scan, /odom, /camera/image_raw, /tf, /map",c:"ros2",d:1,r:["메시지","퍼블리셔","서브스크라이버","QoS"]},
+"메시지":{s:"토픽으로 전달되는 데이터 구조 (.msg)",f:"주요: Twist(속도), LaserScan(LiDAR), Image(카메라), Imu, Odometry, OccupancyGrid, Path. 커스텀 정의 가능.",c:"ros2",d:1,r:["토픽"]},
+"퍼블리셔":{s:"토픽에 메시지를 발행하는 주체",f:"create_publisher(Type,'topic',qos)로 생성. 타이머/이벤트에서 publish() 호출.",c:"ros2",d:1,r:["토픽","QoS"]},
+"서브스크라이버":{s:"토픽 메시지를 수신하는 주체",f:"create_subscription(Type,'topic',callback,qos)로 생성. 메시지 도착 시 콜백 자동 호출.",c:"ros2",d:1,r:["토픽","콜백"]},
+"서비스":{s:"Request-Response 동기 통신",f:"클라이언트→서버 요청→처리→응답. .srv 파일 정의. 1:1. 일회성 작업(지도 저장, 설정 변경).",c:"ros2",d:1,r:["액션"]},
+"액션":{s:"장시간 작업용 Goal-Feedback-Result 통신",f:"Goal→Feedback(진행률)→Result. 중간 취소 가능. NavigateToPose, FollowWaypoints 등 Nav2 액션.",c:"ros2",d:1,r:["서비스","Nav2"]},
+"파라미터":{s:"노드 설정값의 런타임 동적 변경",f:"YAML 초기값, 'ros2 param set'으로 런타임 변경. max_vel, PID 게인 등 코드 수정 없이 조정.",c:"ros2",d:1,r:[]},
+"패키지":{s:"ROS 2 소프트웨어 기본 배포 단위",f:"노드, 라이브러리, 설정, 런치 파일 묶음. package.xml + setup.py/CMakeLists.txt.",c:"ros2",d:1,r:["워크스페이스","colcon","ament"]},
+"워크스페이스":{s:"ROS 2 패키지 빌드·관리 공간",f:"src/(소스), build/, install/, log/ 구조. 'source install/setup.bash'로 환경 로드.",c:"ros2",d:1,r:["colcon"]},
+"colcon":{s:"ROS 2 빌드 도구",f:"'colcon build' 전체 빌드, '--packages-select' 선택 빌드, '--symlink-install' Python 재빌드 불필요.",c:"ros2",d:1,r:["ament"]},
+"ament":{s:"ROS 2 빌드 시스템",f:"ament_python(Python), ament_cmake(C++). colcon이 ament 통해 실제 빌드.",c:"ros2",d:2,r:["colcon"]},
+"런치 파일":{s:"여러 노드 한번에 실행하는 Python 스크립트",f:"LaunchDescription에 Node 추가. 파라미터, 네임스페이스, 조건부 실행 지원.",c:"ros2",d:1,r:["노드","네임스페이스"]},
+"DDS":{s:"Data Distribution Service — ROS 2 통신 미들웨어",f:"쉽게 말해 ROS 2 노드들이 데이터를 주고받을 때 쓰는 '통신 엔진'입니다.\n\nOMG(국제표준기구)에서 만든 표준 통신 규약이며, 다음 기능을 제공합니다:\n• 분산 디스커버리: 중앙 관리자(Master) 없이 노드들이 자동으로 서로를 찾음\n• QoS(통신 품질 설정): 메시지의 신뢰성, 속도 등을 세밀하게 조절 가능\n• 보안: 인증된 노드만 통신 허용\n\n구현체 종류 (택 1):\n• Fast DDS — 기본 내장, 범용\n• Cyclone DDS — 경량, 실시간에 유리",c:"ros2",d:2,r:["QoS"]},
+"QoS":{s:"Quality of Service — 통신 품질 정책",f:"'이 메시지를 어떻게 전달할까?'에 대한 규칙 설정입니다.\n\n3가지 주요 설정:\n\n① Reliability (신뢰성)\n• RELIABLE: 메시지 꼭 도착 보장 (재전송함). 제어 명령에 적합\n• BEST_EFFORT: 빠르지만 유실 가능. 센서 데이터에 적합\n\n② Durability (지속성)\n• TRANSIENT_LOCAL: 늦게 구독해도 이전 데이터를 받을 수 있음\n• VOLATILE: 구독한 시점 이후 데이터만 받음\n\n③ History (기록)\n• KEEP_LAST(N): 최근 N개만 보관 (일반적)\n• KEEP_ALL: 모든 메시지 보관\n\n⚠️ 초보자 주의!\n발행자와 구독자의 QoS가 안 맞으면 통신이 아예 안 됩니다!\n예: 발행=BEST_EFFORT + 구독=RELIABLE → ❌ 통신 불가",c:"ros2",d:2,r:["DDS","토픽"]},
+"TF2":{s:"좌표 프레임 간 변환 라이브러리",f:"'이 센서가 측정한 물체가 지도에서는 어디에 있는가?'를 계산해주는 시스템입니다.\n\n비유: '내 오른쪽 3m에 벽이 있어' → '지도에서 (5,7) 위치에 벽이 있어' 변환\n\n좌표 트리 (부모→자식):\nmap (전체 지도 기준)\n └─ odom (로봇 출발점 기준)\n     └─ base_link (로봇 중심)\n         ├─ laser_frame (LiDAR 위치)\n         ├─ camera_frame (카메라 위치)\n         └─ imu_frame (IMU 위치)\n\n누가 이 변환 정보를 발행하나?\n• map → odom: AMCL이 발행 (위치 보정)\n• odom → base_link: 오도메트리 노드가 발행 (바퀴 기반 위치)\n• base_link → sensors: URDF에서 고정 정의 (센서 장착 위치)",c:"ros2",d:2,r:["프레임","URDF","쿼터니언"]},
+"프레임":{s:"좌표계 기준점 (coordinate frame)",f:"map(전역), odom(오도메트리), base_link(로봇 중심), laser_frame, camera_frame 등.",c:"ros2",d:2,r:["TF2"]},
+"쿼터니언":{s:"Quaternion — 3D 회전의 4원수 표현 (x,y,z,w)",f:"짐벌 락 없는 3D 회전 표현. TF2의 모든 orientation이 쿼터니언.\nYaw만 사용: x=0,y=0,z=sin(θ/2),w=cos(θ/2)\nx²+y²+z²+w²=1 (단위 쿼터니언)",c:"math",d:2,r:["TF2"]},
+"동차 변환 행렬":{s:"4×4 행렬로 회전+이동 통합 표현",f:"[R t; 0 1] — 3×3 회전행렬+3×1 이동벡터. TF2 내부 좌표 변환에 사용. 행렬 곱으로 다단계 변환 연쇄.",c:"math",d:3,r:["TF2","쿼터니언"]},
+"URDF":{s:"Unified Robot Description Format",f:"로봇 구조를 XML로 정의. Link(형태·질량)+Joint(연결·회전축). Gazebo, RViz2, TF2에 사용.",c:"ros2",d:1,r:["Xacro","SDF"]},
+"Xacro":{s:"XML Macro — URDF 매크로 확장",f:"반복 코드를 매크로·변수·조건문으로 간소화. 실무에서 URDF는 xacro로 작성 후 빌드 시 변환.",c:"ros2",d:2,r:["URDF"]},
+"SDF":{s:"Simulation Description Format — Gazebo 전용",f:"URDF보다 풍부한 시뮬레이션 기능(조명, 센서 노이즈, 물리). Gazebo Fortress/Harmonic 기본.",c:"sim",d:2,r:["Gazebo","URDF"]},
+"rclpy":{s:"ROS 2 Python 클라이언트 라이브러리",f:"rclpy.init() 초기화, Node 상속, create_publisher/subscription/service/action, spin() 콜백 처리.",c:"ros2",d:1,r:["Python"]},
+"rclcpp":{s:"ROS 2 C++ 클라이언트 라이브러리",f:"성능 중심. Nav2, SLAM Toolbox 등 핵심 패키지가 rclcpp.",c:"ros2",d:2,r:["C++"]},
+"콜백":{s:"이벤트 발생 시 자동 호출 함수",f:"토픽 수신, 서비스 요청, 타이머 만료 시 호출. spin()이 이벤트 루프 실행.",c:"ros2",d:1,r:["노드"]},
+"네임스페이스":{s:"노드·토픽 이름 충돌 방지 접두사",f:"멀티 로봇: /robot1/cmd_vel, /robot2/cmd_vel. 런치 파일에서 namespace 설정.",c:"ros2",d:2,r:["런치 파일"]},
+"rosbag":{s:"토픽 데이터 녹화/재생 도구",f:"ros2 bag record -a (전체 녹화), play (재생). 알고리즘 반복 테스트, AI 데이터 수집.",c:"ros2",d:1,r:[]},
+"ROS 2 CLI":{s:"명령줄 진단·디버깅 도구",f:"node list, topic echo/hz, param get/set, service call, bag record/play, run, launch.",c:"ros2",d:1,r:[]},
+"Gazebo":{s:"3D 물리 시뮬레이션 환경",f:"물리 법칙(중력·마찰·충돌), 센서 가상 생성. ros2_control 통합으로 시뮬↔실물 전환 가능.",c:"sim",d:1,r:["SDF","RViz2"]},
+"RViz2":{s:"ROS 2 3D 시각화 도구",f:"LiDAR, Costmap, 경로, TF 실시간 시각화. Nav2 목표점 설정(2D Goal Pose).",c:"sim",d:1,r:["Gazebo"]},
+"rqt":{s:"Qt GUI 디버깅 도구 모음",f:"rqt_graph, rqt_plot, rqt_console, rqt_image_view, rqt_reconfigure.",c:"sim",d:1,r:[]},
+"LiDAR":{s:"Light Detection And Ranging — 레이저 거리 센서",f:"360° 레이저로 거리 측정. 2D→LaserScan, 3D→PointCloud2. SLAM·Nav 핵심. 정확(mm), 조명 무관. 단점: 비용, 투명체.",c:"sensor",d:1,r:["LaserScan","포인트 클라우드"]},
+"카메라":{s:"영상 센서 (Mono/Stereo/RGB-D)",f:"Mono: 2D(탐지), Stereo: 깊이추정, RGB-D(RealSense): 깊이직접. sensor_msgs/Image.",c:"sensor",d:1,r:["cv_bridge","OpenCV"]},
+"IMU":{s:"Inertial Measurement Unit — 관성 측정 장치",f:"가속도계+자이로. 가속도, 각속도, 자세(RPY) 측정. 빠른 응답(1kHz). 단점: 드리프트. sensor_msgs/Imu.",c:"sensor",d:1,r:["센서 퓨전","칼만 필터"]},
+"엔코더":{s:"모터 회전량 측정 센서",f:"모터 축 회전수·방향 측정. PPR(Pulse Per Revolution). 오도메트리의 기본 입력.",c:"sensor",d:1,r:["오도메트리"]},
+"오도메트리":{s:"바퀴 회전 기반 위치 추정",f:"엔코더로 바퀴 회전→위치 누적 계산.\nd=(dL+dR)/2, Δθ=(dR-dL)/L\nx+=d·cos(θ), y+=d·sin(θ)\n\n⚠️ 한계: slip, 누적 drift → IMU 퓨전, SLAM 보정 필요.",c:"sensor",d:1,r:["엔코더","Dead Reckoning","센서 퓨전"]},
+"Dead Reckoning":{s:"추측 항법 — 내부 센서만으로 위치 추정",f:"외부 참조 없이 오도메트리·IMU만으로 추정. 장시간 시 오차 누적→외부 보정 필수.",c:"sensor",d:2,r:["오도메트리"]},
+"센서 퓨전":{s:"여러 센서 결합한 정확도 향상",f:"하나의 센서만으로는 부정확하므로, 여러 센서의 데이터를 합쳐서 더 정확한 결과를 만듭니다.\n\n비유: 눈, 귀, 촉각을 동시에 써서 상황을 파악하는 것\n• 엔코더: '바퀴가 이만큼 돌았으니 여기쯤일 거야' (미끄러지면 부정확)\n• IMU: '이 방향으로 회전했어' (시간이 지나면 drift 발생)\n→ 합치면: 서로의 약점을 보완해서 더 정확!\n\nROS 2 표준: robot_localization 패키지 (EKF 사용)",c:"sensor",d:2,r:["칼만 필터","robot_localization"]},
+"칼만 필터":{s:"노이즈 데이터에서 최적 상태 추정",f:"센서는 항상 약간의 오차(노이즈)가 있습니다. 칼만 필터는 이 부정확한 데이터에서 '진짜 값'을 추정합니다.\n\n동작 원리 (비유: 날씨 예측):\n① 예측(Predict): '어제 맑았으니 오늘도 맑을 거야' (모션 모델 기반 예측)\n② 보정(Update): '근데 구름이 끼네?' → 예측 수정 (센서 관측으로 보정)\n③ 반복: 점점 더 정확해짐\n\n확률 필터 가족:\n├─ Kalman(칼만): 기본형. 단순한 상황에 적합\n│   ├─ EKF(확장 칼만): 복잡한 상황에 적합 → robot_localization에서 사용\n│   └─ UKF: 더 정확하지만 계산량 많음\n└─ Particle Filter(파티클 필터): 위치가 여러 곳일 수 있을 때 → AMCL에서 사용\n\n수학적으로: x̂=f(x,u), x=x̂+K·(z-h(x̂))\nK=칼만 게인: 예측과 관측 중 어느 쪽을 더 신뢰할지 결정하는 비율",c:"sensor",d:2,r:["센서 퓨전","베이즈 필터"]},
+"베이즈 필터":{s:"확률적 상태 추정의 일반 프레임워크",f:"Bel(xt)=η·P(zt|xt)·∫P(xt|ut,x_{t-1})·Bel(x_{t-1})dx\n칼만/파티클 필터 모두 베이즈 필터의 구체 구현.",c:"math",d:3,r:["칼만 필터","파티클 필터"]},
+"robot_localization":{s:"ROS 2 EKF/UKF 센서 퓨전 패키지",f:"YAML 설정으로 오도메트리+IMU+GPS 융합. /odometry/filtered 발행.",c:"sensor",d:2,r:["칼만 필터"]},
+"포인트 클라우드":{s:"3D 점 집합 (PointCloud2)",f:"3D LiDAR/RGB-D 생성. PCL로 처리: Voxel Downsampling, Ground Removal, Clustering, ICP.",c:"sensor",d:2,r:["LiDAR"]},
+"LaserScan":{s:"2D LiDAR 메시지 타입",f:"angle_min/max, angle_increment, ranges[] 배열. SLAM·Nav 기본 입력.",c:"sensor",d:1,r:["LiDAR"]},
+"cv_bridge":{s:"OpenCV↔ROS Image 변환",f:"imgmsg_to_cv2() (ROS→OpenCV), cv2_to_imgmsg() (OpenCV→ROS).",c:"sensor",d:1,r:["OpenCV"]},
+"Scan Matching":{s:"연속 LiDAR 스캔 간 정합",f:"두 시점 스캔 비교→상대 이동 추정. SLAM 핵심.\nICP(최근접점 반복), NDT(정규분포 변환), Correlative(상관관계).",c:"slam",d:3,r:["SLAM"]},
+"SLAM":{s:"Simultaneous Localization and Mapping",f:"모르는 공간에서 동시에 '지도 만들기'와 '내 위치 알기'를 수행하는 기술입니다.\n\n닭이 먼저냐 달걀이 먼저냐 문제:\n• 지도를 만들려면 → 내 위치를 알아야 함\n• 위치를 알려면 → 지도가 있어야 함\n→ SLAM은 이 문제를 확률적으로 동시에 해결!\n\n과정:\n① 처음 위치를 (0,0)으로 가정\n② LiDAR로 주변 스캔\n③ 오도메트리(바퀴 회전)로 이동량 추정\n④ Scan Matching: 새 스캔과 이전 스캔을 비교하여 이동량 보정\n⑤ 보정된 위치로 점유격자지도(장애물 유무 지도) 업데이트\n⑥ ②~⑤ 반복 → 지도 완성!\n\n큰 환경에서는 루프 클로저(이전 위치 재인식)로 누적 오차를 보정합니다.",c:"slam",d:1,r:["점유격자지도","루프 클로저","SLAM Toolbox"]},
+"점유격자지도":{s:"Occupancy Grid Map — 2D 격자 환경 지도",f:"격자별 장애물 확률(0~100, -1=미탐색). SLAM 산출물. .pgm+.yaml 저장. nav_msgs/OccupancyGrid.",c:"slam",d:1,r:["SLAM","map_server"]},
+"map_server":{s:"지도 저장·로드 Nav2 노드",f:"ros2 run nav2_map_server map_saver_cli -f ~/map. /map 토픽 발행.",c:"slam",d:1,r:["점유격자지도"]},
+"로컬라이제이션":{s:"지도 위에서 현재 위치 추정",f:"저장 지도+실시간 센서→매칭→위치 추정. AMCL이 표준. map→odom TF 발행.",c:"slam",d:1,r:["AMCL","파티클 필터"]},
+"AMCL":{s:"Adaptive Monte Carlo Localization",f:"파티클 필터 기반. 수천 파티클→센서 매칭→가중치→수렴. 초기 위치(Initial Pose) 필요. Nav2 기본.",c:"slam",d:2,r:["파티클 필터"]},
+"파티클 필터":{s:"몬테카를로 기반 비선형 상태 추정",f:"파티클 생성→관측 비교→가중치→재샘플링.\n칼만과 비교: 칼만=가우시안,유니모달 / 파티클=임의분포,멀티모달",c:"slam",d:2,r:["AMCL","베이즈 필터"]},
+"SLAM Toolbox":{s:"ROS 2 네이티브 2D SLAM",f:"Online/Offline 모드. 직렬화로 매핑 중단/재개. 대규모 지도 효율적. Nav2 표준.",c:"slam",d:1,r:["SLAM"]},
+"Cartographer":{s:"Google 2D/3D SLAM",f:"서브맵 기반+루프 클로저. 높은 정확도. 설정 복잡. 대형 건물 강점.",c:"slam",d:2,r:["SLAM"]},
+"루프 클로저":{s:"이전 방문 장소 재인식→누적 오차 보정",f:"SLAM 중 이전 위치 재방문 인식→누적 오차 한번에 보정. 큰 환경 필수.",c:"slam",d:2,r:["SLAM"]},
+"Nav2":{s:"Navigation 2 — ROS 2 자율주행 프레임워크",f:"SLAM으로 지도를 만든 후, Nav2가 그 지도 위에서 로봇을 자율 주행시킵니다.\n\n비유: 자동차 내비게이션\n• 지도 위에서 현재 위치 파악 (AMCL)\n• 목적지까지 최적 경로 계산 (Planner Server)\n• 경로를 따라 실시간 주행+장애물 회피 (Controller Server)\n• 막히면 자동 복구 시도 (Recovery Server)\n• 위 모든 과정을 자동 조율 (BT Navigator = Behavior Tree로 의사결정)\n\n구성요소:\n• AMCL — 지도 위 현재 위치 추정\n• Planner Server — 전역 경로 계획 (A*, Smac 등)\n• Controller Server — 지역 추종 (DWB, RPP 등) → /cmd_vel 발행\n• Recovery Server — 복구 (회전, 후진, 대기)\n• Costmap 2D — 장애물 비용 지도\n\n모든 서버가 Lifecycle 노드(상태 기반 관리)로 동작합니다.",c:"nav",d:1,r:["Costmap","Behavior Tree","AMCL"]},
+"nav2_simple_commander":{s:"Python Nav2 프로그래밍 API",f:"BasicNavigator: goToPose(), followWaypoints(), goThroughPoses(), isTaskComplete(), getFeedback(), cancelTask().",c:"nav",d:2,r:["Nav2"]},
+"Costmap":{s:"장애물 비용 2D 지도",f:"지도 위에 '위험도'를 숫자로 표시한 비용 지도입니다.\n\n비유: 놀이공원 혼잡도 지도\n빨간 구역=사람 많아서 위험, 초록=안전, 회색=아직 안 가본 곳\n\n비용값:\n• 0: 자유 공간 (안전)\n• 1~252: 위험도 증가 (장애물에 가까울수록)\n• 253: 로봇 외곽이 닿는 거리\n• 254: LETHAL — 확실한 장애물 (벽, 가구)\n• 255: 미탐색 영역\n\n레이어 쌓기 (아래→위로 겹침):\n① Static Layer: SLAM 지도의 고정 장애물 (벽, 가구)\n② Obstacle Layer: LiDAR가 실시간 감지한 장애물 (사람, 물체)\n③ Inflation Layer: 장애물 주변 안전 마진\n④ (선택) Keepout Filter: 진입 금지 구역\n\nGlobal Costmap(전체 지도)+Local Costmap(로봇 주변 3~5m) 두 가지 사용",c:"nav",d:2,r:["Inflation Layer","Keepout Zone"]},
+"Inflation Layer":{s:"장애물 주변 안전 마진",f:"inflation_radius까지 비용 점진 부여. robot_radius보다 크게 설정→충돌 예방.",c:"nav",d:2,r:["Costmap"]},
+"Keepout Zone":{s:"진입 금지/속도 제한 구역",f:"Costmap Filter로 특정 구역 진입 금지·속도 제한. 별도 마스크 맵 YAML 정의.",c:"nav",d:3,r:["Costmap"]},
+"전역 경로 계획":{s:"출발→목표 최적 경로 계산",f:"Global Costmap 위에서 경로 생성. NavFn(A*/Dijkstra), Smac(Hybrid-A*/Lattice), Theta*.",c:"nav",d:2,r:["A* 알고리즘","Smac Planner"]},
+"A* 알고리즘":{s:"휴리스틱 기반 최단 경로 탐색",f:"출발점에서 목적지까지 최단 경로를 찾는 알고리즘입니다.\n\n비유: 미로 찾기를 할 때 '출구 방향을 향해 우선 탐색'하는 전략\n\n핵심 공식: f(n) = g(n) + h(n)\n• g(n): 출발→현재까지 실제 이동 비용 (얼마나 왔나)\n• h(n): 현재→목적지 예상 비용 (얼마나 남았나, 직선거리 등)\n• f(n): 이 경로의 총 예상 비용\n\n동작:\n① 출발점에서 시작\n② f(n)이 가장 낮은 칸을 선택 (목적지에 가까운 쪽 우선)\n③ 이웃 칸 탐색 → 더 좋은 경로 발견 시 갱신\n④ 목적지 도달 → 역추적으로 최종 경로 완성\n\nDijkstra와 차이:\nDijkstra는 h(n)=0 → 모든 방향 균일 탐색 (느림)\nA*는 h(n)>0 → 목적지 방향 우선 탐색 (빠름!)",c:"nav",d:2,r:["전역 경로 계획"]},
+"Smac Planner":{s:"Nav2 고급 전역 경로 계획기",f:"Smac 2D(격자), Hybrid-A*(최소 회전반경), Lattice(모션 프리미티브). NavFn보다 동역학에 맞는 경로.",c:"nav",d:3,r:["전역 경로 계획"]},
+"지역 경로 추종":{s:"전역 경로 실시간 추종+장애물 회피",f:"Local Costmap 기반 cmd_vel 생성. DWB(Nav2 기본), RPP(곡률), MPPI(GPU), TEB(시간최적).",c:"nav",d:2,r:["DWB","RPP","MPPI","cmd_vel"]},
+"DWB":{s:"Dynamic Window Based — Nav2 기본 로컬 컨트롤러",f:"가능한 (v,ω) 샘플링→궤적 평가(경로추종, 장애물, 목표방향)→최적 속도 선택.",c:"nav",d:2,r:["지역 경로 추종"]},
+"RPP":{s:"Regulated Pure Pursuit — 곡률 기반 추종",f:"전방 lookahead point 향해 원호 이동. 커브 자동 감속, 직선 가속. 부드러운 주행.",c:"nav",d:2,r:["지역 경로 추종"]},
+"MPPI":{s:"Model Predictive Path Integral — GPU 최신 컨트롤러",f:"GPU로 수천 경로 동시 샘플링→비용 평가→최적 선택. 복잡한 환경 우수. CUDA 필요.",c:"nav",d:3,r:["지역 경로 추종"]},
+"Recovery Behavior":{s:"Nav 실패 시 자동 복구",f:"Spin(제자리), BackUp(후진), Wait(대기), ClearCostmap. BT가 자동 선택.",c:"nav",d:2,r:["Behavior Tree"]},
+"Behavior Tree":{s:"트리 구조 로봇 의사결정 (BT)",f:"로봇의 의사결정을 나무(트리) 구조로 정리한 것입니다.\n\n비유: 회사 업무 매뉴얼\n'경로 계획 → 따라가기 → 실패하면? → 회전 시도 → 그래도 안 되면? → 후진'\n\n기본 노드 타입:\n• Sequence(순서): AND처럼 동작. 모든 자식이 성공해야 성공\n• Fallback(대안): OR처럼 동작. 하나라도 성공하면 성공\n• Action(행동): 실제 작업 수행 (경로 계산, 이동 등)\n• Condition(조건): 조건 확인 (배터리 OK? 경로 있음?)\n\n예시:\nSequence {\n  ComputePath → FollowPath\n} 실패 시 → Fallback { Spin, BackUp }\n\nXML 파일로 작성하며, Nav2의 BT Navigator가 이를 실행합니다.",c:"nav",d:2,r:["Nav2"]},
+"웨이포인트":{s:"경유 지점 목록",f:"순서대로 방문할 지점들. FollowWaypoints 액션. 순찰·배달 로봇.",c:"nav",d:1,r:["nav2_simple_commander"]},
+"cmd_vel":{s:"Twist 속도 명령 토픽",f:"linear.x(전진 m/s), angular.z(회전 rad/s). 컨트롤러→모터 드라이버.",c:"nav",d:1,r:["지역 경로 추종"]},
+"텔레오퍼레이션":{s:"키보드/조이스틱 원격 수동 조종",f:"SLAM 매핑 시 수동 이동, 비상 제어. teleop_twist_keyboard.",c:"nav",d:1,r:["cmd_vel"]},
+"객체 탐지":{s:"이미지에서 물체 위치+종류 인식",f:"바운딩 박스+클래스+신뢰도 예측. YOLO, SSD, Faster R-CNN. /detections 발행.",c:"ai",d:1,r:["YOLO","CNN"]},
+"YOLO":{s:"You Only Look Once — 실시간 객체 탐지",f:"한번 봐서 모든 객체 동시 탐지. v5/v8/v9. n/s/m/l/x 크기. Jetson 실시간 가능.",c:"ai",d:1,r:["객체 탐지","TensorRT"]},
+"CNN":{s:"Convolutional Neural Network — 합성곱 신경망",f:"Conv(특징 추출)→Pooling(축소)→반복(저→고수준)→FC(분류). YOLO, ResNet 등 기반.",c:"ai",d:2,r:["YOLO","딥러닝"]},
+"딥러닝":{s:"심층 신경망 기반 머신러닝",f:"CNN(이미지), RNN/Transformer(시퀀스). 자율주행: 객체 탐지, 세그멘테이션, End-to-End.",c:"ai",d:1,r:["CNN"]},
+"TensorRT":{s:"NVIDIA GPU 추론 최적화 엔진",f:"FP16/INT8 양자화, 레이어 퓨전. Jetson 실시간 추론 필수.",c:"ai",d:2,r:["Jetson","YOLO"]},
+"OpenCV":{s:"오픈소스 컴퓨터 비전 라이브러리",f:"색변환, 필터링, 에지, 특징점, 캘리브레이션. cv_bridge로 ROS 연동.",c:"ai",d:1,r:["cv_bridge"]},
+"LLM":{s:"Large Language Model — 대규모 언어 모델",f:"자연어 명령 이해('부엌으로 가서 컵 가져와'), 상황 설명, 의사결정 보조. VLA 모델 결합.",c:"ai",d:2,r:["피지컬 AI"]},
+"PID 제어":{s:"비례-적분-미분 피드백 제어기",f:"출력=Kp·e + Ki·∫edt + Kd·de/dt\nP: 현재 오차  I: 누적 오차(정상상태 제거)  D: 변화율(오버슈트 억제)\n튜닝: P 올림→진동→D 감쇠→I 잔류 제거",c:"ctrl",d:2,r:["기구학"]},
+"기구학":{s:"로봇 운동 기하학적 관계",f:"순기구학: 바퀴속도→로봇 v,ω\n역기구학: 원하는 v,ω→바퀴속도\n차동 역기구학: vL=v-ω·L/2, vR=v+ω·L/2",c:"ctrl",d:2,r:["차동 구동","오도메트리"]}
+};
+
+// ── 🔰 초보자 쉬운 설명 ──
+const BT={
+"ROS 2":"로봇을 만들 때 바퀴 굴리기, 센서 읽기, 길 찾기 등을 처음부터 안 만들어도 되게 해주는 '로봇 개발 도구 모음'이에요.",
+"ROS 1":"ROS 2의 이전 버전. 지금은 거의 안 쓰이고 ROS 2로 넘어가는 추세예요.",
+"모바일 로봇":"스스로 이동할 수 있는 로봇. 물류 로봇, 배달 로봇, 청소 로봇 등이 대표적이에요.",
+"차동 구동":"왼쪽·오른쪽 바퀴 속도를 다르게 해서 방향을 바꾸는 방식. 탱크가 회전하는 원리와 같아요.",
+"SBC":"손바닥만 한 작은 컴퓨터. 로봇의 '두뇌' 역할을 해요. 라즈베리파이가 대표적이에요.",
+"Raspberry Pi":"5만원대로 살 수 있는 초소형 컴퓨터. 교육용 로봇에 많이 써요.",
+"Jetson":"NVIDIA가 만든 AI 전용 미니 컴퓨터. 카메라로 물체 인식 같은 AI 작업에 강해요.",
+"피지컬 AI":"화면 속이 아니라 실제 세계에서 움직이는 AI. 로봇이 직접 보고, 판단하고, 행동해요.",
+"액추에이터":"전기 신호를 받아서 실제로 움직이는 부품. 쉽게 말해 '모터'예요.",
+"모터 드라이버":"SBC의 약한 신호를 모터를 돌릴 수 있는 강한 전류로 바꿔주는 회로예요.",
+"PWM":"전기를 빠르게 껐다 켰다 해서 모터 속도를 조절하는 방법이에요. 선풍기 '약/중/강' 같은 원리예요.",
+"GPIO":"SBC에 달린 작은 핀들. 여기에 LED, 모터, 센서 등을 연결해요.",
+"ros2_control":"모터 종류가 바뀌어도 위쪽 프로그램은 안 고쳐도 되게 해주는 중간 다리 역할이에요.",
+"Ubuntu":"리눅스 운영체제의 한 종류. ROS 2를 쓰려면 거의 필수예요.",
+"Linux":"윈도우, macOS처럼 컴퓨터를 돌리는 운영체제. 무료이고 로봇 개발에 최적이에요.",
+"SSH":"다른 컴퓨터에 원격으로 접속하는 방법. 내 PC에서 로봇의 SBC를 조종할 수 있어요.",
+"Python":"배우기 쉬운 프로그래밍 언어. 이 강의에서 주로 사용해요.",
+"C++":"빠른 속도가 필요한 프로그램에 쓰는 언어. ROS 2의 핵심 패키지들이 이걸로 만들어져 있어요.",
+"노드":"ROS 2에서 하나의 작업을 담당하는 프로그램 단위. '카메라 담당', '바퀴 담당'처럼 역할을 나눠요.",
+"Lifecycle Node":"노드를 '준비→실행→정지' 단계로 체계적으로 관리하는 방식이에요.",
+"Component Node":"여러 노드를 하나의 프로그램 안에서 합쳐 돌려서 속도를 높이는 기술이에요.",
+"토픽":"노드들이 데이터를 주고받는 '게시판' 같은 통로예요. 누구나 올리고 읽을 수 있어요.",
+"메시지":"토픽을 통해 전달되는 데이터의 형식. 편지의 '양식'과 같아요.",
+"퍼블리셔":"토픽에 메시지를 올리는(발행하는) 쪽이에요.",
+"서브스크라이버":"토픽의 메시지를 받아보는(구독하는) 쪽이에요.",
+"서비스":"'이것 좀 해줘'라고 요청하면 '됐어'라고 답해주는 1:1 통신이에요.",
+"액션":"오래 걸리는 작업을 시키면서 '지금 몇 % 진행됐어?'를 중간중간 알려주는 통신이에요.",
+"파라미터":"코드를 수정하지 않고도 로봇의 설정값(속도, 감도 등)을 바꿀 수 있는 기능이에요.",
+"패키지":"관련 있는 프로그램, 설정 파일 등을 하나로 묶은 꾸러미예요. 앱스토어의 '앱' 같은 단위예요.",
+"워크스페이스":"패키지들을 모아놓고 빌드하는 작업 폴더예요.",
+"colcon":"작성한 코드를 실행 가능한 프로그램으로 만들어주는(빌드하는) 도구예요.",
+"ament":"colcon이 내부적으로 사용하는 빌드 시스템이에요. 보통 직접 건드릴 일은 없어요.",
+"런치 파일":"여러 노드를 한꺼번에 실행시키는 스크립트예요. 일일이 하나씩 안 켜도 돼요.",
+"DDS":"ROS 2가 노드끼리 데이터를 주고받을 때 사용하는 통신 엔진이에요. 중앙 관리자 없이도 서로를 자동으로 찾아줘요.",
+"QoS":"'이 데이터는 반드시 도착해야 해' vs '빠르기만 하면 돼' 같은 통신 품질 설정이에요.",
+"TF2":"'LiDAR가 감지한 벽이 지도에서 어디쯤인가?'를 계산해주는 좌표 변환 시스템이에요.",
+"프레임":"좌표의 기준점. '로봇 기준', '지도 기준', '센서 기준' 등이 있어요.",
+"쿼터니언":"3D 회전을 표현하는 수학적 방법. 4개의 숫자(x,y,z,w)로 방향을 나타내요.",
+"동차 변환 행렬":"위치 이동+회전을 하나의 행렬로 표현하는 수학 도구예요.",
+"URDF":"로봇의 생김새(링크)와 관절(조인트)을 XML 파일로 정의하는 포맷이에요.",
+"Xacro":"URDF를 더 간결하게 쓸 수 있게 해주는 매크로 도구예요.",
+"SDF":"시뮬레이션(Gazebo)에서 쓰는 로봇+환경 정의 파일 형식이에요.",
+"rclpy":"Python으로 ROS 2 노드를 만들 때 쓰는 라이브러리예요.",
+"rclcpp":"C++로 ROS 2 노드를 만들 때 쓰는 라이브러리예요.",
+"콜백":"'메시지가 도착하면 이 함수를 자동으로 실행해줘'라고 등록해두는 함수예요.",
+"네임스페이스":"이름 앞에 접두사를 붙여서 같은 이름의 노드/토픽이 충돌하지 않게 해줘요.",
+"rosbag":"토픽 데이터를 녹화했다가 나중에 재생할 수 있는 도구예요. 영상 녹화기 같은 거예요.",
+"ROS 2 CLI":"터미널에서 타이핑으로 ROS 2를 조작하는 명령어 도구예요.",
+"Gazebo":"컴퓨터 안에서 가상 로봇을 돌려볼 수 있는 3D 시뮬레이터예요.",
+"RViz2":"센서 데이터, 지도, 경로 등을 눈으로 볼 수 있게 3D로 보여주는 시각화 도구예요.",
+"rqt":"노드 연결 그래프, 센서 값 그래프 등을 GUI로 보여주는 디버깅 도구 모음이에요.",
+"LiDAR":"레이저를 360도로 쏴서 주변 물체까지의 거리를 측정하는 센서예요. 로봇의 '눈'이에요.",
+"카메라":"영상을 촬영하는 센서. 물체 인식, 색 구분 등에 사용해요.",
+"IMU":"로봇이 얼마나 기울어졌는지, 얼마나 빠르게 회전하는지 측정하는 센서예요.",
+"엔코더":"바퀴가 몇 바퀴 돌았는지 세는 센서예요. 이동 거리 계산의 기본이에요.",
+"오도메트리":"바퀴 회전량을 누적해서 '내가 지금 어디쯤 있는지' 추정하는 방법이에요.",
+"Dead Reckoning":"외부 정보(GPS, 지도) 없이 내부 센서만으로 위치를 추측하는 방법이에요.",
+"센서 퓨전":"여러 센서의 데이터를 합쳐서 하나의 더 정확한 결과를 만드는 기술이에요.",
+"칼만 필터":"노이즈 섞인 센서 데이터에서 '진짜 값'을 추정하는 수학적 방법이에요.",
+"베이즈 필터":"확률을 이용해 '지금 상태가 뭘까?'를 추정하는 일반적인 프레임워크예요.",
+"robot_localization":"오도메트리+IMU 등 여러 센서를 합쳐서 더 정확한 위치를 계산해주는 ROS 2 패키지예요.",
+"포인트 클라우드":"3D 공간의 점들의 집합. 3D LiDAR나 RGB-D 카메라가 만들어내요.",
+"LaserScan":"2D LiDAR가 측정한 거리 데이터의 메시지 형식이에요.",
+"cv_bridge":"ROS의 이미지 형식과 OpenCV의 이미지 형식을 서로 변환해주는 다리 역할이에요.",
+"Scan Matching":"두 시점의 LiDAR 스캔을 비교해서 '로봇이 얼마나 움직였나'를 알아내는 기술이에요.",
+"SLAM":"모르는 공간을 돌아다니면서 동시에 지도도 만들고 내 위치도 파악하는 기술이에요.",
+"점유격자지도":"공간을 바둑판처럼 칸으로 나누고 각 칸에 '장애물 있음/없음/모름'을 기록한 지도예요.",
+"map_server":"만들어진 지도를 저장하거나, 저장된 지도를 불러오는 역할을 하는 프로그램이에요.",
+"로컬라이제이션":"이미 만들어진 지도 위에서 '내가 지금 정확히 어디에 있는지' 알아내는 기술이에요.",
+"AMCL":"수천 개의 '후보 위치'를 뿌려서 센서 데이터와 비교하며 진짜 위치를 찾는 방법이에요.",
+"파티클 필터":"'내가 여기일 수도 있고, 저기일 수도 있어'라는 후보들(파티클)을 뿌려서 점점 정답에 수렴하는 방법이에요.",
+"SLAM Toolbox":"ROS 2에서 SLAM을 할 때 가장 많이 쓰는 표준 패키지예요.",
+"Cartographer":"구글이 만든 정밀 SLAM 패키지예요. 큰 건물에서 특히 강해요.",
+"루프 클로저":"SLAM 중에 '아, 여기 아까 왔던 곳이네!' 하고 인식해서 누적된 오차를 확 보정하는 기술이에요.",
+"Nav2":"지도 위에서 로봇이 스스로 목표 지점까지 찾아가게 해주는 자율주행 프레임워크예요.",
+"nav2_simple_commander":"Python 코드 몇 줄로 '저기로 가!', '여기 순서대로 돌아!' 명령을 내릴 수 있는 간편 API예요.",
+"Costmap":"지도 위에 '여기는 위험(장애물 가까움)', '여기는 안전'을 숫자로 표시한 비용 지도예요.",
+"Inflation Layer":"장애물 주변에 '가까이 가면 위험해!' 라는 안전 마진을 추가하는 레이어예요.",
+"Keepout Zone":"'이 구역은 절대 들어가지 마!'라고 지정하는 금지 구역이에요.",
+"전역 경로 계획":"출발지에서 목적지까지의 '큰 그림' 경로를 계산하는 것이에요. 네비 앱의 경로 탐색과 같아요.",
+"A* 알고리즘":"'목적지 방향을 우선 탐색'해서 빠르게 최단 경로를 찾는 알고리즘이에요.",
+"Smac Planner":"로봇이 실제로 꺾을 수 있는 각도까지 고려해서 경로를 짜는 고급 플래너예요.",
+"지역 경로 추종":"전역 경로를 따라가면서 갑자기 나타난 장애물을 피하는 실시간 제어예요.",
+"DWB":"여러 후보 속도를 시뮬레이션해보고 가장 좋은 걸 고르는 기본 로컬 컨트롤러예요.",
+"RPP":"전방의 한 점을 향해 부드럽게 원호를 그리며 따라가는 추종 방식이에요.",
+"MPPI":"GPU로 수천 개의 경로를 동시에 시뮬레이션해서 최적을 고르는 최신 방식이에요.",
+"Recovery Behavior":"로봇이 막혀서 못 갈 때 '제자리 회전', '후진' 등을 자동으로 시도하는 복구 동작이에요.",
+"Behavior Tree":"'경로 계획 → 따라가기 → 실패하면 복구'처럼 의사결정을 트리 구조로 정리한 것이에요.",
+"웨이포인트":"순서대로 방문할 지점 목록. '1번→2번→3번 순서로 가!' 같은 순찰 경로예요.",
+"cmd_vel":"로봇에게 '앞으로 이 속도로, 이 각도로 회전해'라고 보내는 속도 명령 토픽이에요.",
+"텔레오퍼레이션":"키보드나 조이스틱으로 로봇을 직접 수동 조종하는 것이에요.",
+"객체 탐지":"카메라 영상에서 '이건 사람, 저건 의자'처럼 물체의 종류와 위치를 찾아내는 AI 기술이에요.",
+"YOLO":"이미지를 한 번만 봐서 모든 물체를 동시에 찾아내는 초고속 AI 모델이에요.",
+"CNN":"이미지에서 특징(윤곽, 질감 등)을 자동으로 뽑아내는 딥러닝 구조예요.",
+"딥러닝":"사람 뇌의 신경망을 흉내 낸 AI 학습 방법. 이미지 인식, 자연어 처리 등에 사용돼요.",
+"TensorRT":"NVIDIA GPU에서 AI 모델을 빠르게 실행할 수 있도록 최적화해주는 도구예요.",
+"OpenCV":"이미지 처리(필터, 색 변환, 윤곽선 등)를 위한 가장 유명한 오픈소스 라이브러리예요.",
+"LLM":"ChatGPT 같은 대규모 언어 모델. 로봇에게 '부엌 가서 컵 가져와'처럼 자연어로 명령할 수 있게 해줘요.",
+"PID 제어":"목표값과 현재값의 차이(오차)를 줄이기 위해 3가지 방법(비례·적분·미분)을 합친 제어 방식이에요.",
+"기구학":"바퀴 속도와 로봇 이동의 수학적 관계. '바퀴를 이렇게 돌리면 로봇은 이렇게 움직인다'를 계산해요."
+};
+
+const COMPS=[
+{t:"ROS 1 vs ROS 2",h:["항목","ROS 1","ROS 2"],r:[["통신","Master 기반","DDS 분산"],["실시간","미지원","PREEMPT-RT"],["보안","없음","SROS2"],["OS","Linux만","Linux/Win/Mac"],["빌드","catkin","colcon+ament"],["상태관리","없음","Lifecycle"],["최종","Noetic 2020","계속 개발"]]},
+{t:"센서 비교",h:["센서","원리","장점","단점","용도"],r:[["2D LiDAR","레이저","정확,조명무관","비쌈","SLAM,장애물"],["카메라","영상","풍부,저렴","조명의존","탐지,인식"],["IMU","관성","빠른응답","드리프트","자세,보정"],["엔코더","회전량","안정적","미끄러짐","오도메트리"],["RGB-D","적외선깊이","깊이직접","야외불가","3D SLAM"]]},
+{t:"Nav2 플래너 비교",h:["플래너","유형","특징","적합"],r:[["NavFn","전역","A*/Dijkstra","실내 범용"],["Smac Hybrid-A*","전역","회전반경 고려","차량형"],["Theta*","전역","대각선 직선","개방공간"],["DWB","로컬","속도 샘플링","범용(기본)"],["RPP","로컬","곡률, 감속","부드러운"],["MPPI","로컬","GPU 수천경로","복잡환경"]]},
+{t:"확률 필터 비교",h:["필터","가정","장점","단점"],r:[["Kalman","선형+가우시안","효율,최적","선형만"],["EKF","비선형+가우시안","범용","선형화오차"],["UKF","비선형+가우시안","정확","계산↑"],["Particle","임의분포","멀티모달","파티클수의존"]]}
+];
+
+const CHEAT=[
+{c:"시스템",m:[["ros2 node list","노드 목록"],["ros2 topic list","토픽 목록"],["ros2 topic echo /scan","메시지 확인"],["ros2 topic hz /scan","주파수 확인"],["ros2 node info /node","노드 상세"]]},
+{c:"파라미터",m:[["ros2 param list /node","파라미터 목록"],["ros2 param get /node key","값 확인"],["ros2 param set /node key val","런타임 변경"]]},
+{c:"데이터",m:[["ros2 bag record -a","전체 녹화"],["ros2 bag record /scan /odom","선택 녹화"],["ros2 bag play bag_dir","재생"]]},
+{c:"빌드",m:[["colcon build --symlink-install","빌드"],["source install/setup.bash","환경 로드"],["ros2 run pkg node","노드 실행"],["ros2 launch pkg file.launch.py","런치"]]},
+{c:"시각화",m:[["ros2 run tf2_tools view_frames","TF 트리"],["ros2 run rqt_graph rqt_graph","노드 그래프"],["ros2 run rviz2 rviz2","RViz2"]]}
+];
+
+const PARTS=[
+{id:1,i:"📋",t:"강의 소개 및 로봇 선정 가이드",cl:4,h:"0:55",tm:["ROS 2","ROS 1","모바일 로봇","차동 구동","SBC","Raspberry Pi","Jetson","피지컬 AI"],
+co:[{t:"왜 ROS 2인가?",b:"로봇 소프트웨어를 개발할 때 통신, 센서 드라이버, 경로 계획 등을 처음부터 만들면 수년이 걸립니다. ROS 2는 이미 수천 명의 개발자가 검증한 패키지 생태계를 제공합니다.\n\nROS 1 → ROS 2 전환 이유:\n• Master 노드 제거 → 단일 장애점(SPOF) 없는 분산 구조\n• DDS 미들웨어 → QoS, 보안, 자동 디스커버리\n• Lifecycle 노드 → 노드 상태(초기화→활성→종료) 명시적 관리\n• 멀티 플랫폼 → Linux, Windows, macOS 지원\n• Component 노드 → Zero-copy로 프로세스 내 통신 최적화\n\n현재 로봇 업계(삼성, 현대, 네이버랩스 등)는 ROS 2로 전환 중이며, 신규 프로젝트는 대부분 ROS 2로 시작합니다."},{t:"실습용 로봇 하드웨어 구조",b:"자율주행 로봇의 기본 하드웨어 구성:\n\n[두뇌 — SBC]\n• Raspberry Pi: 교육용, 저렴, GPIO 제어 직관적\n• Jetson: AI 추론 최적, CUDA GPU 내장, 비용 높음\n• 선택 기준: AI 기능 필요 → Jetson / 기본 자율주행 → Raspberry Pi\n\n[근육 — 액추에이터]\n• DC 모터 + 모터 드라이버(L298N): PWM으로 속도·방향 제어\n• 서보 모터: 카메라 팬/틸트, 매니퓰레이터 관절\n\n[감각 — 센서]\n• LiDAR: 360° 거리 측정 → SLAM, 장애물 감지\n• 카메라: 영상 → 객체 탐지, 시각 인식\n• IMU: 가속도+각속도 → 자세 추정, 오도메트리 보정\n• 엔코더: 바퀴 회전량 → 오도메트리(이동거리 계산)\n\n[골격] 로봇 프레임, 바퀴(차동 구동), 배터리\n\n강의에서는 HiWonder 사의 실물 로봇을 사용합니다."}]},
+{id:2,i:"🔩",t:"실물 모바일 로봇 조립~구동",cl:14,h:"4:52",tm:["Ubuntu","Linux","SSH","Python","C++","GPIO","액추에이터","모터 드라이버","PWM","엔코더","ros2_control"],
+co:[{t:"Ubuntu 개발 환경 구축",b:"ROS 2는 Ubuntu Linux를 1차 지원합니다.\n\n환경 구성 순서:\n1. SBC(Raspberry Pi)에 Ubuntu Server 설치 (GUI 없이 가볍게)\n2. 개발 PC에 Ubuntu Desktop 설치 (또는 듀얼 부팅/VM)\n3. 같은 Wi-Fi에 연결 → IP 주소 확인\n4. SSH로 개발 PC → SBC 원격 접속\n5. ROS 2 설치: sudo apt install ros-humble-desktop\n6. 환경 설정: source /opt/ros/humble/setup.bash\n\n핵심 리눅스 명령어:\n• ls, cd, mkdir, rm — 파일 관리\n• sudo apt install — 패키지 설치\n• nano/vim — 텍스트 편집\n• chmod +x — 실행 권한 부여\n• systemctl — 서비스(부팅 시 자동 실행 등) 관리\n• ifconfig/ip addr — IP 주소 확인"},{t:"모터 구동 흐름과 ros2_control",b:"로봇이 움직이는 전체 흐름:\n\n[Nav2 컨트롤러] → /cmd_vel 토픽 → [모터 드라이버 노드] → GPIO/PWM → [모터 드라이버 회로] → [DC 모터] → [바퀴 회전]\n\nPWM 제어 원리:\n• 디지털 핀의 ON/OFF 비율(듀티 사이클)로 속도 제어\n• 0% = 정지, 50% = 절반 속도, 100% = 최대\n• 주파수는 보통 1~20kHz\n\nros2_control 프레임워크:\n전통적 방식은 모터 드라이버를 직접 제어하는 노드를 작성하는 것이지만, ros2_control은 하드웨어를 추상화합니다:\n\n• Hardware Interface: 실제 모터/엔코더 드라이버\n• Controller Manager: 컨트롤러 로드·관리\n• Controller: diff_drive_controller (차동 구동 제어)\n\n장점:\n1. 하드웨어 교체 시 상위 SW 수정 불필요\n2. Gazebo 시뮬레이션 ↔ 실물 로봇 전환이 설정 파일만 바꾸면 됨\n3. 표준화된 인터페이스로 다른 패키지와 호환성 보장"}]},
+{id:3,i:"🤖",t:"실물 로봇으로 ROS 2 끝장내기",cl:27,h:"7:20",tm:["노드","Lifecycle Node","Component Node","토픽","메시지","퍼블리셔","서브스크라이버","서비스","액션","파라미터","패키지","워크스페이스","colcon","ament","런치 파일","DDS","QoS","TF2","프레임","쿼터니언","동차 변환 행렬","URDF","Xacro","rclpy","rclcpp","콜백","네임스페이스","ROS 2 CLI","rosbag","Gazebo","RViz2","rqt"],
+co:[{t:"ROS 2 3대 통신: 토픽 vs 서비스 vs 액션",b:"ROS 2는 세 가지 통신 패턴을 상황에 맞게 사용합니다:\n\n[토픽 (Topic)] — Pub-Sub, 비동기, 1:N / N:N\n• 언제: 지속적 데이터 스트림 (센서, 속도 명령)\n• 특징: 발행자는 구독자 존재를 모름, 메시지가 흘러감\n• 예시: /scan(LiDAR), /cmd_vel(속도), /odom(위치), /tf\n\n[서비스 (Service)] — Request-Response, 동기, 1:1\n• 언제: 일회성 요청 (지도 저장, 설정 변경)\n• 특징: 클라이언트가 요청→응답 대기. 완료까지 블로킹\n• 예시: /map_server/save_map, /trigger_calibration\n\n[액션 (Action)] — Goal-Feedback-Result, 비동기, 취소 가능\n• 언제: 장시간 작업 (목표 이동, 경로 추종)\n• 특징: 중간 피드백(진행률), 중간 취소(Cancel) 가능\n• 예시: /navigate_to_pose, /follow_waypoints, /spin\n\n판단 기준:\n• 데이터가 계속 흐르는가? → 토픽\n• 한번 요청하고 끝인가? → 서비스\n• 오래 걸리고 중간 상태가 필요한가? → 액션"},{t:"TF2: 좌표 변환의 핵심",b:"자율주행에서 '이 LiDAR 데이터가 지도 기준 어디인가?'를 알려면 좌표 변환이 필수입니다.\n\nTF 트리 (부모→자식):\nmap ← 전역 고정 좌표계\n └─ odom ← 오도메트리 좌표계 (연속적, drift 있음)\n     └─ base_link ← 로봇 중심\n         ├─ laser_frame ← LiDAR\n         ├─ camera_frame ← 카메라\n         ├─ imu_frame ← IMU\n         └─ left_wheel / right_wheel\n\n누가 발행하는가:\n• map → odom: AMCL(로컬라이제이션)이 발행. 오도메트리 drift 보정\n• odom → base_link: 오도메트리 노드가 발행. 엔코더 기반\n• base_link → sensors: URDF에서 정적으로 정의 (고정 위치)\n\n쿼터니언 (Quaternion):\nTF2의 모든 회전(orientation)은 (x,y,z,w) 4개 값으로 표현.\n• 오일러각(RPY)의 짐벌 락 문제 해결\n• 2D 로봇에서 Yaw만 사용: z=sin(θ/2), w=cos(θ/2), x=y=0\n• tf_transformations로 오일러 ↔ 쿼터니언 변환"},{t:"QoS와 DDS — 통신 품질 제어",b:"DDS(Data Distribution Service)는 ROS 2의 통신 엔진. QoS로 메시지 전달 방식을 세밀 제어:\n\n[Reliability] — 메시지 보장 여부\n• RELIABLE: 재전송으로 보장. 제어 명령용. 느릴 수 있음\n• BEST_EFFORT: 빠르지만 손실 가능. 센서 데이터용\n\n[Durability] — 늦은 구독자 처리\n• TRANSIENT_LOCAL: 구독 전 발행된 데이터도 수신 (지도 데이터에 유용)\n• VOLATILE: 구독 시점 이후만 수신\n\n[History] — 메시지 큐\n• KEEP_LAST(N): 최근 N개만 유지. 일반적\n• KEEP_ALL: 모든 메시지 보관\n\n⚠️ QoS 호환성 규칙:\n• Pub: BEST_EFFORT + Sub: RELIABLE → ❌ 통신 불가!\n• Pub: RELIABLE + Sub: BEST_EFFORT → ✅ 가능\n• Pub: TRANSIENT_LOCAL + Sub: VOLATILE → ✅ 가능\n\n실무 팁:\n센서 토픽이 안 보이면 'ros2 topic info --verbose'로 QoS 확인 → 불일치가 가장 흔한 원인"}]},
+{id:4,i:"📡",t:"자율주행 센서 끝장내기",cl:20,h:"4:50",tm:["LiDAR","카메라","IMU","엔코더","오도메트리","Dead Reckoning","센서 퓨전","칼만 필터","베이즈 필터","robot_localization","포인트 클라우드","LaserScan","cv_bridge","Scan Matching"],
+co:[{t:"자율주행 핵심 센서 완전 비교",b:"각 센서의 역할과 특성을 정확히 이해하는 것이 중요합니다:\n\n[LiDAR] 🔴 — 거리의 왕\n• 원리: 레이저 발사 → 반사 시간(ToF)으로 거리 측정\n• 출력: LaserScan(2D, 수평 360°) 또는 PointCloud2(3D)\n• 장점: mm 단위 정확도, 조명 무관, SLAM의 핵심\n• 단점: 비용(수십만~수백만원), 투명체·검은 물체 감지 어려움\n\n[카메라] 📸 — 정보의 왕\n• 출력: sensor_msgs/Image (RGB)\n• 장점: 풍부한 정보(색, 질감, 문자 인식), 저렴\n• 단점: 조명 의존, 거리 정보 없음(Mono), 처리량 큼\n• 종류: Mono(2D), Stereo(깊이 추정), RGB-D(깊이 직접 측정)\n\n[IMU] ⚡ — 속도의 왕\n• 원리: 가속도계 + 자이로스코프 (+ 자력계)\n• 출력: sensor_msgs/Imu (가속도, 각속도, orientation)\n• 장점: 초고속(100~1000Hz), 진동·충격·급회전 감지\n• 단점: 시간 경과 시 drift(각도 오차 누적)\n\n[엔코더] 🔄 — 기본 중의 기본\n• 원리: 모터 축 회전량 측정 (광학/자기식)\n• 장점: 안정적, 직관적, 저렴\n• 단점: 바퀴 미끄러짐(slip) 시 부정확\n• 용도: 오도메트리 계산의 기본 입력"},{t:"오도메트리와 Dead Reckoning",b:"오도메트리는 엔코더로 바퀴 회전을 측정하여 위치를 추정합니다.\n\n차동 구동 오도메트리 공식:\n1. 좌/우 바퀴 이동거리 계산:\n   dL = 2π × R × (ΔticksL / PPR)\n   dR = 2π × R × (ΔticksR / PPR)\n   (R=바퀴 반지름, PPR=엔코더 분해능)\n\n2. 로봇 이동거리와 회전:\n   d = (dL + dR) / 2      ← 평균 이동거리\n   Δθ = (dR - dL) / L     ← 회전각 (L=바퀴간 거리)\n\n3. 새 위치 갱신:\n   x += d × cos(θ + Δθ/2)\n   y += d × sin(θ + Δθ/2)\n   θ += Δθ\n\nDead Reckoning = 외부 참조 없이 내부 센서만으로 위치 추정하는 총칭. 오도메트리가 대표적.\n\n⚠️ 근본적 한계:\n• 바퀴 미끄러짐(slip) → 실제 이동 ≠ 측정값\n• 오차가 누적(drift) → 100m 주행 후 수 미터 오차 가능\n• 해결: IMU 퓨전 + SLAM으로 보정"},{t:"센서 퓨전과 칼만 필터 (확률 로보틱스 기초)",b:"센서 퓨전은 여러 센서의 장점을 결합하여 더 정확한 추정을 합니다.\n\n확률 필터의 계보:\nBayes Filter (일반 이론)\n├─ Kalman Filter (선형 + 가우시안)\n│   ├─ EKF: Extended (비선형 확장) ← robot_localization 사용\n│   └─ UKF: Unscented (시그마 포인트)\n└─ Particle Filter (임의 분포, 멀티모달)\n    └─ AMCL (Nav2 로컬라이제이션)\n\nEKF(Extended Kalman Filter) 동작:\n1. [예측] 모션 모델로 다음 상태 예측\n   '오도메트리: 0.1m 전진, 0.02rad 좌회전했을 거야'\n   → x̂ = f(x, u) + 예측 불확실성(공분산 증가)\n\n2. [보정] 센서 관측으로 예측을 수정\n   'IMU: 실제로는 0.03rad 좌회전이었어'\n   → x = x̂ + K × (관측값 - 예측 관측값)\n   K = 칼만 게인 (예측 불확실성 / (예측+관측 불확실성))\n   → 관측이 더 정확하면 K↑ (관측을 더 신뢰)\n   → 예측이 더 정확하면 K↓ (예측을 더 신뢰)\n\n3. [반복] 점점 더 정확한 추정으로 수렴\n\nrobot_localization 패키지:\n• odom0: 바퀴 오도메트리 → x, y, yaw 사용\n• imu0: IMU → yaw, angular_z 사용\n• 결과: /odometry/filtered 토픽 → 개선된 위치"}]},
+{id:5,i:"🗺️",t:"SLAM & Navigation 끝장내기",cl:20,h:"6:25",tm:["SLAM","점유격자지도","map_server","로컬라이제이션","AMCL","파티클 필터","SLAM Toolbox","Cartographer","루프 클로저","Nav2","nav2_simple_commander","Costmap","Inflation Layer","Keepout Zone","전역 경로 계획","A* 알고리즘","Smac Planner","지역 경로 추종","DWB","RPP","MPPI","Recovery Behavior","Behavior Tree","웨이포인트","cmd_vel","텔레오퍼레이션"],
+co:[{t:"SLAM: 지도 생성의 원리",b:"SLAM은 '닭이 먼저냐 달걀이 먼저냐' 문제를 확률적으로 해결합니다:\n• 지도를 만들려면 → 내 위치를 알아야 함\n• 위치를 알려면 → 지도가 있어야 함\n\n동작 과정:\n1. 처음 위치를 (0,0,0)으로 가정\n2. LiDAR로 주변 스캔\n3. 오도메트리로 이동량 추정\n4. Scan Matching: 새 스캔과 이전 스캔을 정합하여 이동량 보정\n   • ICP: 두 포인트셋의 최근접점 매칭을 반복\n   • NDT: 정규분포로 변환하여 매칭\n5. 보정된 위치 기반으로 점유격자지도 업데이트\n6. 2~5 반복\n\n루프 클로저 (Loop Closure):\n로봇이 한 바퀴 돌아 이전 위치로 돌아왔을 때:\n• '어? 여기 전에 왔던 곳이네!' → 인식\n• 출발~현재까지의 누적 오차를 한번에 보정\n• 없으면 큰 환경에서 지도가 서서히 뒤틀림\n\nSLAM Toolbox 사용:\n$ ros2 launch slam_toolbox online_async_launch.py\n$ ros2 run nav2_map_server map_saver_cli -f ~/map"},{t:"Nav2 자율주행 프레임워크 전체 구조",b:"SLAM으로 지도를 만든 후, Nav2로 자율 주행합니다.\n\n전체 흐름:\n[RViz2에서 목표 클릭] → [BT Navigator] → [Planner] → [Controller] → [/cmd_vel] → [모터]\n\n1. AMCL (로컬라이제이션)\n   • 저장된 지도 위에서 파티클 필터로 현재 위치 추정\n   • map → odom TF 발행 (오도메트리 drift 보정)\n\n2. Planner Server (전역 경로 계획)\n   • Global Costmap 위에서 출발→목표 최적 경로 계산\n   • NavFn(A*/Dijkstra), Smac(Hybrid-A*), Theta* 등\n   • nav_msgs/Path 메시지로 경로 발행\n\n3. Controller Server (지역 경로 추종)\n   • Local Costmap으로 실시간 장애물 감지\n   • 전역 경로를 따라가면서 동적 장애물 회피\n   • DWB, RPP, MPPI 등 → /cmd_vel 발행\n\n4. Recovery Server (복구)\n   • 경로 실패 시: Spin(회전), BackUp(후진), Wait(대기)\n   • Costmap 초기화(Clear Costmap)\n\n5. BT Navigator (Behavior Tree)\n   • 위 모든 서버를 XML 트리 구조로 조율\n   • 경로 계획 → 추종 → 실패 시 복구 → 재시도"},{t:"Costmap과 A* 알고리즘 상세",b:"Costmap — '여기를 지나가면 얼마나 위험한가?'\n\n비용값:\n• 0: 자유 공간 (안전하게 이동 가능)\n• 1~252: 위험도 증가 (Inflation 영역)\n• 253: inscribed radius (로봇 외곽이 닿는 거리)\n• 254: LETHAL — 확실한 장애물 (벽, 가구)\n• 255: 미탐색 영역\n\n레이어 쌓기:\n① Static Layer: SLAM 지도의 벽, 가구 등 고정 장애물\n② Obstacle Layer: LiDAR가 실시간 감지한 사람, 이동 물체\n③ Inflation Layer: 장애물에서 inflation_radius까지 비용 점진 부여\n④ (선택) Keepout Filter: 진입 금지 구역\n⑤ (선택) Speed Filter: 속도 제한 구역\n\nA* 알고리즘 동작:\n1. 시작 노드를 Open List에 추가\n2. f(n) = g(n) + h(n) 최소인 노드 선택\n   • g(n): 시작→n까지 실제 비용 (이동 거리)\n   • h(n): n→목표 추정 비용 (맨해튼/유클리드 거리)\n3. 이웃 탐색 → 더 낮은 비용 경로 발견 시 갱신\n4. 목표 도달 → 부모를 따라 역추적 = 최종 경로\n\nDijkstra와 차이: Dijkstra는 h(n)=0이라 모든 방향을 균일 탐색(느림). A*는 목표 방향을 우선 탐색(빠름)."}]},
+{id:6,i:"🚀",t:"포트폴리오 실물 로봇 프로젝트",cl:19,h:"5:31",tm:["객체 탐지","YOLO","CNN","딥러닝","TensorRT","OpenCV","LLM","PID 제어","기구학"],
+co:[{t:"AI + 자율주행 통합 아키텍처",b:"강의의 최종 목표는 모든 기술을 통합하는 것입니다:\n\n[인지 계층 — Perception]\n├─ LiDAR → SLAM(지도 생성), 장애물 감지\n├─ 카메라 → YOLO 객체 탐지 (보행자, 물체 인식)\n├─ IMU + 엔코더 → 오도메트리 (위치 추정)\n└─ robot_localization → EKF 센서 퓨전\n\n[판단 계층 — Planning]\n├─ AMCL → 지도 위 정확한 위치 추정\n├─ Nav2 Planner → A*/Smac로 전역 경로\n├─ Nav2 Controller → DWB/RPP로 지역 추종\n└─ Behavior Tree → 미션 의사결정\n\n[제어 계층 — Control]\n├─ /cmd_vel → 선속도 + 각속도 명령\n├─ PID 제어 → 모터 정밀 속도 제어\n└─ ros2_control → 하드웨어 추상화\n\n[AI 계층 — Intelligence]\n├─ YOLO + TensorRT → 실시간 객체 인식\n├─ LLM → 자연어 미션 이해\n└─ OpenCV → 영상 전처리"},{t:"CNN과 YOLO 객체 탐지 원리",b:"CNN (Convolutional Neural Network) 기본 구조:\n\n1. Conv Layer (합성곱): 작은 필터(커널, 예: 3×3)가 이미지를 훑으며 특징 추출\n   • 얕은 층: 에지, 코너, 질감 → 저수준 특징\n   • 깊은 층: 눈, 바퀴, 얼굴 → 고수준 특징\n\n2. Pooling Layer: 공간 크기 축소 (Max Pooling: 영역 내 최대값)\n   → 계산량 줄이면서 핵심 특징 유지\n\n3. FC Layer (Fully Connected): 추출된 특징을 종합하여 분류/탐지\n\nYOLO 동작 방식:\n• 이미지를 S×S 격자로 분할\n• 각 격자에서 동시에 바운딩 박스 + 클래스 확률 예측\n• '한번만 보고(You Only Look Once)' 모든 객체를 동시 탐지\n• 기존 R-CNN 계열(영역 제안→분류 2단계)보다 훨씬 빠름\n\nJetson에서 최적화:\n• PyTorch 모델 → ONNX → TensorRT 변환\n• FP32 → FP16/INT8 양자화: 정확도 약간 손실, 속도 2~4배↑\n• YOLOv8n(nano) + TensorRT: Jetson Orin에서 60+FPS 가능"},{t:"PID 제어와 튜닝",b:"PID는 목표값과 현재값의 차이(오차)를 세 가지 항으로 제어합니다:\n\n출력 = Kp × e(t) + Ki × ∫e(t)dt + Kd × de(t)/dt\n\nP (비례): Kp × 현재 오차\n• 오차가 크면 출력도 큼. 빠른 반응\n• Kp 너무 크면 → 진동(oscillation)\n• Kp 너무 작으면 → 느린 반응, 정상상태 오차 잔존\n\nI (적분): Ki × 누적 오차\n• 오랜 시간 남아있는 작은 오차를 제거\n• Ki 너무 크면 → 오버슈트, 와인드업\n\nD (미분): Kd × 오차 변화율\n• 오차가 빠르게 줄어들면 출력을 미리 감소 → 오버슈트 억제\n• 노이즈에 민감할 수 있음\n\n실무 튜닝법:\n1. 수동: P만 올려서 진동 시작 → D 추가하여 감쇠 → I로 잔류 오차 제거\n2. Ziegler-Nichols: Ku(한계 게인, 지속 진동이 시작되는 P값)와 Tu(진동 주기) 측정\n   → Kp=0.6Ku, Ki=Kp/(0.5Tu), Kd=Kp×0.125Tu\n\n로봇에서 PID 적용:\n• 바퀴 속도 제어: 목표 RPM vs 엔코더 측정 RPM\n• 직선 주행 유지: 좌우 엔코더 값 차이를 0으로 유지\n• 벽 따라가기: LiDAR 측정 벽 거리를 일정하게 유지"}]}
+];
+
+// ── STATE ──
+const S={v:"home",part:null,tab:"terms",exp:{},done:{},sq:"",gf:"all",df:0,fc:0,fcFlip:false,fcMode:false,
+quiz:null,qLoad:false,qErr:null,qa:{},qSub:false,qCnt:5,qDiff:1,qScore:null,apiShow:false};
+
+let _apiKey="";
+try{_apiKey=localStorage.getItem("ros2_api_key")||"AIzaSyDN3xXsy-__kS81Z6BE4wz77iGTPMw4Gmg";}catch(e){_apiKey="AIzaSyDN3xXsy-__kS81Z6BE4wz77iGTPMw4Gmg";}
+
+function go(upd){Object.assign(S,upd);render();}
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML;}
+function nl2br(s){return esc(s).replace(/\n/g,"<br>")}
+
+// ── QUIZ GENERATOR ──
+async function genQuiz(){
+  if(!_apiKey){alert("🔑 상단에서 Gemini API 키를 먼저 입력해주세요!");return;}
+  const p=PARTS.find(x=>x.id===S.part);if(!p)return;
+  go({qLoad:true,qErr:null,quiz:null,qa:{},qSub:false,qScore:null});
+  const dn=S.qDiff===1?"입문(기본 개념, 용어 정의)":S.qDiff===2?"중급(원리 이해, 비교 분석)":"심화(수식, 내부 동작, 응용)";
+  const td=p.tm.filter(t=>G[t]).map(t=>`[${t}] ${G[t].s}: ${G[t].f}`).join("\n\n");
+  const cd=(p.co||[]).map(c=>`[이론: ${c.t}]\n${c.b}`).join("\n\n");
+  const prompt=`당신은 ROS 2 자율주행 로봇 개발 교육 전문가입니다.
+
+아래 [학습 자료]를 바탕으로 4지선다 퀴즈를 정확히 ${S.qCnt}개 만들어주세요.
+난이도: ${dn}
+
+[절대 규칙 - 반드시 준수]
+1. 오직 아래 [학습 자료]에 명시적으로 포함된 내용만으로 문제를 출제하세요
+2. 학습 자료에 없는 내용, 추측, 외부 지식을 절대 사용하지 마세요
+3. 정답과 오답 모두 학습 자료에서 확인 가능해야 합니다
+4. 각 문제의 정답은 반드시 1개여야 합니다
+5. 오답 선지도 학습 자료 내 다른 개념에서 가져와 그럴듯하게 만드세요
+6. explanation은 학습 자료의 어떤 부분에서 답이 나오는지 근거를 포함해 1~2문장으로 작성하세요
+
+[난이도 가이드]
+- 입문: 용어 정의, 약어 풀이, 기본 개념 확인
+- 중급: 원리 이해, 개념 간 비교, 차이점, 적용 상황 판단
+- 심화: 내부 동작 원리, 수식, 실무 트러블슈팅, 복합 개념
+
+반드시 아래 JSON 형식으로만 응답하세요. JSON 외 다른 텍스트, 마크다운, 설명을 절대 포함하지 마세요:
+[{"q":"질문","o":["선지A","선지B","선지C","선지D"],"a":정답인덱스0부터3,"e":"해설"}]
+
+[학습 자료 - 용어]
+${td}
+
+[학습 자료 - 이론]
+${cd}`;
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${_apiKey}`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{temperature:0.3,maxOutputTokens:4096}
+      })
+    });
+    const d=await r.json();
+    if(d.error){throw new Error(d.error.message||"API 오류");}
+    const txt=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts||[]).map(p=>p.text||"").join("");
+    const clean=txt.replace(/```json|```/g,"").trim();
+    const quiz=JSON.parse(clean);
+    if(!Array.isArray(quiz)||quiz.length===0)throw new Error("빈 응답");
+    go({quiz,qLoad:false});
+  }catch(e){go({qLoad:false,qErr:"퀴즈 생성 실패: "+(e.message||"다시 시도해주세요.")});}
+}
+
+// ── FILTERED TERMS ──
+function getFiltered(){
+  return Object.entries(G).filter(([k,v])=>{
+    if(S.sq&&!k.toLowerCase().includes(S.sq.toLowerCase())&&!v.s.toLowerCase().includes(S.sq.toLowerCase())&&!v.f.toLowerCase().includes(S.sq.toLowerCase()))return false;
+    if(S.gf!=="all"&&v.c!==S.gf)return false;
+    if(S.df>0&&v.d!==S.df)return false;
+    return true;
+  });
+}
+
+// ── RENDER HELPERS ──
+function linkTerms(text){
+  // 설명 텍스트 안의 용어를 클릭 가능한 링크로 변환
+  let html=nl2br(text);
+  const termKeys=Object.keys(G).sort((a,b)=>b.length-a.length);
+  termKeys.forEach(tk=>{
+    const escaped=esc(tk).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const regex=new RegExp('(?<![\\w가-힣])'+escaped+'(?![\\w가-힣])','g');
+    html=html.replace(regex,`<span style="color:var(--ac);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:pointer" onclick="event.stopPropagation();go({v:'glossary',sq:'${esc(tk)}',gf:'all',df:0})">${esc(tk)}</span>`);
+  });
+  return html;
+}
+
+function termCard(k,v,open){
+  const ct=CATS[v.c];
+  const bt=BT[k];
+  return `<div class="card" onclick="go({exp:Object.assign({},S.exp,{'${esc(k)}':${open?'false':'true'}})})">
+  <div class="tc-head">
+    <span class="tc-badge" style="color:${ct.c};background:${ct.c}18">${ct.i}${ct.l}</span>
+    <span class="tc-badge" style="color:${DC(v.d)};background:${DC(v.d)}18">${DL(v.d)}</span>
+    <span class="tc-name">${esc(k)}</span>
+    <span class="tc-arrow ${open?'open':''}">▼</span>
+  </div>
+  <div class="tc-short">${esc(v.s)}</div>
+  ${open?`${bt?`<div style="margin-top:8px;padding:8px 10px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:7px;font-size:11.5px;line-height:1.7;color:#86efac"><span style="font-weight:700">🔰 쉬운 말로</span>&nbsp;&nbsp;${esc(bt)}</div>`:""}
+  <div class="tc-detail">${linkTerms(v.f)}</div>
+  ${v.r&&v.r.length?`<div class="tc-refs"><span style="font-size:10px;color:var(--tm)">연관:</span>${v.r.map(r=>`<span class="tc-ref" onclick="event.stopPropagation();go({v:'glossary',sq:'${esc(r)}',gf:'all',df:0})">${esc(r)}</span>`).join("")}</div>`:""}`:""}
+  </div>`;
+}
+
+// ── MAIN RENDER ──
+function render(){
+  const $=document.getElementById("app");
+  const allT=Object.entries(G);
+  const totalConcepts=PARTS.reduce((a,p)=>a+(p.co?p.co.length:0),0);
+  const doneN=Object.keys(S.done).length;
+  const prog=Math.round(doneN/6*100);
+
+  // API bar
+  let apiBar=`<div class="api-bar ${S.apiShow?'show':''}" id="abar">
+    <div class="api-row">
+      <span style="color:var(--tm);font-size:11px;flex-shrink:0">🔑</span>
+      <input class="api-input" type="password" id="akIn" placeholder="AIzaSy..." value="${esc(_apiKey)}">
+      <button class="api-save" onclick="saveApiKey()">저장</button>
+      <span class="api-ok" id="apiOk">✓</span>
+    </div>
+    <div class="api-hint">AI 퀴즈 기능에 필요 (Gemini Flash) · 키는 브라우저에만 저장됩니다</div>
+  </div>`;
+
+  // ── FLASHCARD ──
+  if(S.fcMode){
+    const terms=getFiltered();const ts=terms.length>0?terms:allT;
+    const idx=S.fc%ts.length;const[ck,cv]=ts[idx];const ct=CATS[cv.c];
+    $.innerHTML=apiBar+`
+    <div class="topbar"><button class="btn-back" onclick="go({fcMode:false})">← 돌아가기</button>
+    <span style="font-size:14px;font-weight:700;flex:1">🃏 플래시카드</span>
+    <span style="font-size:11px;color:var(--tm);font-family:monospace">${idx+1}/${ts.length}</span></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:16px;min-height:60vh">
+      <div class="fc-card ${S.fcFlip?'flipped':''}" onclick="go({fcFlip:!S.fcFlip})">
+        ${!S.fcFlip?`
+          <div style="font-size:10px;color:${ct.c};margin-bottom:6px">${ct.i} ${ct.l}·${DL(cv.d)}</div>
+          <div style="font-size:20px;font-weight:700;margin-bottom:10px">${esc(ck)}</div>
+          <div style="font-size:12px;color:var(--td)">${esc(cv.s)}</div>
+          <div style="font-size:11px;color:var(--tm);margin-top:16px">탭하여 뒤집기</div>
+        `:`
+          <div style="font-size:13px;font-weight:600;color:var(--ac);margin-bottom:10px">${esc(ck)}</div>
+          ${BT[ck]?`<div style="font-size:11.5px;color:#86efac;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);padding:6px 10px;border-radius:6px;margin-bottom:10px;line-height:1.6;text-align:left"><b>🔰</b> ${esc(BT[ck])}</div>`:""}
+          <div style="font-size:12px;line-height:1.8;color:var(--td);white-space:pre-line;text-align:left;max-height:50vh;overflow-y:auto">${nl2br(cv.f)}</div>
+        `}
+      </div>
+    </div>
+    <div style="padding:12px 16px 24px;display:flex;justify-content:center;gap:10px">
+      <button class="btn-tag" onclick="go({fc:Math.max(0,S.fc-1),fcFlip:false})">← 이전</button>
+      <button class="btn-tag on" onclick="go({fc:S.fc+1,fcFlip:false})">다음 →</button>
+    </div>`;
+    return;
+  }
+
+  // ── GLOSSARY / COMPARE / CHEAT ──
+  if(S.v==="glossary"||S.v==="compare"||S.v==="cheat"){
+    let inner="";
+    if(S.v==="glossary"){
+      const ft=getFiltered();
+      inner=`<input class="search" id="sqIn" placeholder="용어 검색..." value="${esc(S.sq)}" oninput="go({sq:this.value})">
+      <div class="filter-row">
+        <button class="btn-tag ${S.gf==='all'?'on':''}" onclick="go({gf:'all'})">전체</button>
+        ${Object.entries(CATS).map(([k,v])=>`<button class="btn-tag ${S.gf===k?'on':''}" style="${S.gf===k?`border-color:${v.c}55;background:${v.c}18;color:${v.c}`:''}" onclick="go({gf:'${k}'})">${v.i}${v.l}</button>`).join("")}
+      </div>
+      <div class="filter-row" style="margin-bottom:12px">
+        ${[{v:0,l:"전체"},{v:1,l:"⭐입문"},{v:2,l:"⭐⭐중급"},{v:3,l:"⭐⭐⭐심화"}].map(d=>`<button class="btn-tag ${S.df===d.v?'on':''}" onclick="go({df:${d.v}})">${d.l}</button>`).join("")}
+        <span style="margin-left:auto;font-size:10px;color:var(--tm);font-family:monospace">${ft.length}개</span>
+      </div>
+      ${ft.length?ft.map(([k,v])=>termCard(k,v,!!S.exp[k])).join(""):'<div class="empty">검색 결과 없음</div>'}`;
+    }else if(S.v==="compare"){
+      inner=COMPS.map(tb=>`<div style="margin-bottom:20px">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:8px">${esc(tb.t)}</h3>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="tbl"><thead><tr>${tb.h.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${tb.r.map(r=>`<tr>${r.map((c,i)=>`<td${i===0?' style="color:var(--t);font-weight:600"':''}>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>`).join("");
+    }else{
+      inner=CHEAT.map(s=>`<div style="margin-bottom:16px">
+        <h3 style="font-size:13px;font-weight:700;color:var(--ac);margin-bottom:6px">${esc(s.c)}</h3>
+        <div style="background:var(--cb);border:1px solid var(--b);border-radius:8px;overflow:hidden">
+          ${s.m.map(([cmd,desc],j)=>`<div class="cheat-row" ${j<s.m.length-1?'':'style="border-bottom:none"'}><code class="cheat-cmd">${esc(cmd)}</code><span class="cheat-desc">${esc(desc)}</span></div>`).join("")}
+        </div></div>`).join("");
+    }
+    $.innerHTML=apiBar+`
+    <div class="topbar"><button class="btn-back" onclick="go({v:'home'})">← 홈</button>
+    <span style="font-size:14px;font-weight:700;flex:1">${S.v==="glossary"?"📖 전체 용어 사전":S.v==="compare"?"📊 비교표":"⌨️ CLI 치트시트"}</span>
+    ${S.v==="glossary"?'<button class="btn-tag on" onclick="go({fcMode:true,fc:0,fcFlip:false})">🃏</button>':''}
+    </div><div class="content">${inner}</div>`;
+    return;
+  }
+
+  // ── PART VIEW ──
+  if(S.v==="part"&&S.part){
+    const p=PARTS.find(x=>x.id===S.part);
+    let tabContent="";
+
+    if(S.tab==="terms"){
+      tabContent=p.tm.map(t=>G[t]?termCard(t,G[t],!!S.exp[t]):"").join("");
+    }else if(S.tab==="theory"){
+      tabContent=(p.co||[]).map((c,i)=>`<div class="concept">
+        <div class="concept-idx">CONCEPT ${i+1} / ${p.co.length}</div>
+        <div class="concept-title">${esc(c.t)}</div>
+        <div class="concept-body">${nl2br(c.b)}</div>
+      </div>`).join("")||'<div class="empty">이론 설명이 준비 중입니다</div>';
+    }else{
+      // Quiz tab
+      if(S.qLoad){
+        tabContent=`<div style="text-align:center;padding:40px 0"><div style="font-size:28px;margin-bottom:10px">⏳</div><div style="color:var(--td);font-size:13px">AI가 퀴즈를 생성 중...</div></div>`;
+      }else if(!S.quiz){
+        tabContent=`<div class="card" style="padding:20px;text-align:center">
+          <div style="font-size:24px;margin-bottom:8px">🤖</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">AI 동적 퀴즈 (Gemini Flash)</div>
+          <div style="font-size:11px;color:var(--td);margin-bottom:16px">학습 자료 기반 · 할루시네이션 없는 문제 생성</div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;color:var(--tm);margin-bottom:4px">문제 수</div>
+            <div style="display:flex;gap:4px;justify-content:center">${[5,10,15,20].map(n=>`<button class="btn-tag ${S.qCnt===n?'on':''}" onclick="go({qCnt:${n}})">${n}문제</button>`).join("")}</div>
+          </div>
+          <div style="margin-bottom:16px">
+            <div style="font-size:11px;color:var(--tm);margin-bottom:4px">난이도</div>
+            <div style="display:flex;gap:4px;justify-content:center">${[1,2,3].map(d=>`<button class="btn-tag ${S.qDiff===d?'on':''}" onclick="go({qDiff:${d}})">${"⭐".repeat(d)} ${DL(d)}</button>`).join("")}</div>
+          </div>
+          <button class="btn-pill" style="background:linear-gradient(135deg,var(--acd),#0891b2);padding:12px 32px" onclick="genQuiz()">퀴즈 생성하기</button>
+          ${S.qErr?`<div style="color:var(--r);font-size:12px;margin-top:10px">${esc(S.qErr)}</div>`:""}
+        </div>`;
+      }else{
+        // Show quiz
+        const quiz=S.quiz;
+        let sc=S.qSub?quiz.filter((q,i)=>S.qa[i]===q.a).length:0;
+        tabContent=(S.qSub?`<div class="card" style="padding:14px;display:flex;align-items:center;gap:12px;border-color:${sc===quiz.length?'var(--gd)':'#7f1d1d'};background:${sc===quiz.length?'rgba(52,211,153,.08)':'rgba(248,113,113,.06)'}">
+          <span style="font-size:28px">${sc===quiz.length?"🎉":"📊"}</span>
+          <div><div style="font-size:16px;font-weight:700;color:${sc===quiz.length?'var(--g)':'var(--r)'}">${sc}/${quiz.length}점</div>
+          <div style="font-size:11px;color:var(--td)">${sc===quiz.length?"완벽합니다!":"틀린 문제를 확인해보세요"}</div></div>
+        </div>`:"")+
+        quiz.map((q,qi)=>{
+          const ans=S.qa[qi];const sub=S.qSub;
+          return `<div class="card" style="padding:14px;margin-bottom:10px">
+            <div style="font-size:11px;color:var(--ac);font-family:monospace;margin-bottom:4px">Q${qi+1}</div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:10px;line-height:1.5">${esc(q.q)}</div>
+            ${q.o.map((o,oi)=>{
+              let cls="quiz-opt";
+              if(sub){if(oi===q.a)cls+=" correct";else if(oi===ans&&ans!==q.a)cls+=" wrong";}
+              else if(ans===oi)cls+=" sel";
+              return `<button class="${cls}" ${sub?'disabled':''} onclick="S.qa[${qi}]=${oi};render()">${esc(o)}</button>`;
+            }).join("")}
+            ${sub?`<div style="margin-top:8px;padding:8px 10px;background:var(--acg);border-radius:6px;font-size:11px;color:var(--td);line-height:1.6">💡 ${esc(q.e)}</div>`:""}
+          </div>`;
+        }).join("")+
+        (S.qSub?`<div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-pill" style="background:linear-gradient(135deg,var(--acd),#0891b2);padding:10px 20px" onclick="go({quiz:null,qa:{},qSub:false,qScore:null})">새 퀴즈</button>
+        </div>`:`<div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-pill" style="background:${Object.keys(S.qa).length<quiz.length?'var(--b)':'linear-gradient(135deg,var(--acd),#0891b2)'};padding:10px 20px;${Object.keys(S.qa).length<quiz.length?'opacity:.5':''}" ${Object.keys(S.qa).length<quiz.length?'disabled':''} onclick="submitQuiz()">제출 (${Object.keys(S.qa).length}/${quiz.length})</button>
+          <button class="btn-tag" onclick="go({quiz:null,qa:{},qSub:false})">취소</button>
+        </div>`);
+      }
+    }
+
+    const tabs=[["terms",`📖 용어 (${p.tm.length})`],["theory",`📘 이론 (${(p.co||[]).length})`],["quiz","📝 AI 퀴즈"]];
+    $.innerHTML=apiBar+`
+    <div class="topbar"><button class="btn-back" onclick="go({v:'home',part:null})">← 홈</button>
+    <span style="font-size:16px">${p.i}</span>
+    <div style="flex:1;min-width:0"><div style="font-size:9px;color:var(--ac);font-family:monospace">PART ${p.id}</div><div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.t)}</div></div>
+    <button class="btn-tag" style="font-size:10px" onclick="toggleApi()">🔑</button></div>
+    <div class="tabs">${tabs.map(([k,l])=>`<button style="padding:10px 12px;background:none;border:none;border-bottom:2px solid ${S.tab===k?'var(--ac)':'transparent'};color:${S.tab===k?'var(--ac)':'var(--tm)'};font-size:12px;cursor:pointer;white-space:nowrap;font-family:inherit" onclick="go({tab:'${k}',quiz:${k!=='quiz'?'null':'S.quiz'},qa:${k!=='quiz'?'{}':'S.qa'},qSub:${k!=='quiz'?'false':'S.qSub'}})">${l}</button>`).join("")}</div>
+    <div class="content">${tabContent}</div>`;
+    return;
+  }
+
+  // ── HOME ──
+  $.innerHTML=apiBar+`
+  <div class="hdr"><div class="hdr-in">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+      <span style="font-size:20px">🤖</span>
+      <span style="font-size:9px;font-family:monospace;color:var(--ac);background:var(--acg);padding:2px 7px;border-radius:3px;letter-spacing:1.5px">FASTCAMPUS v6 · 🔰초보자 모드 · Gemini Flash</span>
+      <button class="btn-tag" style="margin-left:auto;font-size:10px;padding:4px 8px" onclick="toggleApi()">🔑 API</button>
+    </div>
+    <h1 style="font-size:18px;font-weight:800;margin:4px 0;line-height:1.3">ROS 2 & AI 자율주행 로봇 개발</h1>
+    <p style="color:var(--td);font-size:11px;margin:2px 0 0">용어 ${allT.length}개 · 🔰쉬운 설명 · 용어 자동 링크 · AI 퀴즈 · 플래시카드</p>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--tm);margin-top:12px"><span>파트 클리어</span><span style="color:var(--ac);font-family:monospace">${doneN}/6 (${prog}%)</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${prog}%"></div></div>
+  </div></div>
+  <div class="content">
+    <div class="tool-grid">
+      ${[{l:"📖 용어 사전",v:"glossary",n:allT.length+"개"},{l:"🃏 플래시카드",v:"fc",n:"암기 모드"},{l:"📊 비교표",v:"compare",n:COMPS.length+"개"},{l:"⌨️ 치트시트",v:"cheat",n:"CLI 명령어"}].map(b=>`<button class="tool-btn" onclick="${b.v==='fc'?'go({fcMode:true,fc:0,fcFlip:false})':`go({v:'${b.v}',sq:'',gf:'all',df:0})`}">
+        <div class="tool-emoji">${b.l.split(" ")[0]}</div>
+        <div class="tool-label">${b.l.split(" ").slice(1).join(" ")}</div>
+        <div class="tool-sub">${b.n}</div>
+      </button>`).join("")}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${PARTS.map(p=>{
+        const ok=S.done[p.id];
+        return `<div class="card part-card" ${ok?`style="border-color:var(--gd)"`:""} onclick="go({v:'part',part:${p.id},tab:'terms',exp:{},quiz:null,qa:{},qSub:false,qScore:null})">
+          <div class="part-icon">${p.i}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:2px">
+              <span style="font-size:9px;font-family:monospace;color:var(--ac)">PART ${p.id}</span>
+              <span style="font-size:9px;font-family:monospace;color:var(--tm)">${p.cl}클립·${p.h}</span>
+              ${ok?'<span style="font-size:9px;font-family:monospace;color:var(--g);background:var(--gd);padding:1px 5px;border-radius:3px">CLEAR</span>':""}
+            </div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px">${esc(p.t)}</div>
+            <div class="tag-row">${p.tm.slice(0,4).map(t=>`<span class="tag-sm">${esc(t.length>8?t.slice(0,8)+"…":t)}</span>`).join("")}${p.tm.length>4?`<span style="font-size:9px;color:var(--tm)">+${p.tm.length-4}</span>`:""}</div>
+          </div>
+          <div style="color:var(--tm);font-size:14px;flex-shrink:0;margin-top:6px">›</div>
+        </div>`}).join("")}
+    </div>
+  </div>`;
+}
+
+// ── ACTIONS ──
+function toggleApi(){S.apiShow=!S.apiShow;render();}
+function saveApiKey(){
+  const v=document.getElementById("akIn");if(!v)return;
+  _apiKey=v.value.trim();
+  try{localStorage.setItem("ros2_api_key",_apiKey);}catch(e){}
+  const ok=document.getElementById("apiOk");if(ok){ok.style.display="inline";setTimeout(()=>ok.style.display="none",2000);}
+}
+function submitQuiz(){
+  S.qSub=true;
+  const quiz=S.quiz;if(!quiz)return;
+  const sc=quiz.filter((q,i)=>S.qa[i]===q.a).length;
+  S.qScore=sc;
+  if(sc===quiz.length&&S.part)S.done[S.part]=true;
+  render();
+}
+
+// ── INIT ──
+render();
+</script>
+</body>
+</html>
