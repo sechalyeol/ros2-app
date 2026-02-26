@@ -111,12 +111,29 @@ code{font-family:'SF Mono','Menlo',monospace}
 .tag-sm{font-size:9px;color:var(--tm);background:var(--cb);padding:1px 5px;border-radius:3px;border:1px solid var(--b)}
 .empty{text-align:center;color:var(--tm);padding:40px 0}
 
+/* Term tooltip */
+.tt-word{color:var(--ac);border-bottom:1.5px dotted rgba(6,182,212,0.5);cursor:pointer;padding-bottom:0.5px;transition:color .15s}
+.tt-word:active{color:#22d3ee}
+#termTip{display:none;position:fixed;left:8px;right:8px;bottom:0;z-index:100;padding:0 0 env(safe-area-inset-bottom,0);pointer-events:none}
+#termTip.show{display:block;pointer-events:auto}
+.tt-box{background:#162032;border:1px solid var(--ac);border-radius:12px 12px 0 0;padding:14px 16px 16px;box-shadow:0 -4px 24px rgba(0,0,0,.5);max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tt-head{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.tt-name{font-size:14px;font-weight:700;color:var(--ac);flex:1}
+.tt-sub{font-size:11px;color:var(--td);margin-bottom:8px}
+.tt-easy{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:7px;padding:8px 10px;font-size:12px;line-height:1.7;color:#86efac;margin-bottom:8px}
+.tt-detail{font-size:11.5px;line-height:1.8;color:var(--td);white-space:pre-line;max-height:25vh;overflow-y:auto}
+.tt-close{background:none;border:1px solid var(--b);color:var(--tm);border-radius:6px;padding:3px 8px;font-size:11px;flex-shrink:0}
+.tt-goto{display:inline-block;margin-top:8px;font-size:11px;color:var(--ac);background:var(--acg);padding:4px 10px;border-radius:5px;text-decoration:none;cursor:pointer}
+.tt-overlay{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.3)}
+
 /* Safe area bottom */
 .safe-bottom{padding-bottom:env(safe-area-inset-bottom,0)}
 </style>
 </head>
 <body>
 <div class="app" id="app"></div>
+<div class="tt-overlay" id="ttOverlay" style="display:none" onclick="closeTip()"></div>
+<div id="termTip"><div class="tt-box" id="ttBox"></div></div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
@@ -441,15 +458,47 @@ function getFiltered(){
 }
 
 // ── RENDER HELPERS ──
+// ── TOOLTIP ──
+function showTip(termName){
+  const v=G[termName];if(!v)return;
+  const ct=CATS[v.c];
+  const bt=BT[termName];
+  const tip=document.getElementById("termTip");
+  const box=document.getElementById("ttBox");
+  const ov=document.getElementById("ttOverlay");
+  box.innerHTML=`
+    <div class="tt-head">
+      <span class="tt-name">${esc(termName)}</span>
+      <span style="font-size:10px;color:${ct.c}">${ct.i}${ct.l}</span>
+      <button class="tt-close" onclick="closeTip()">✕</button>
+    </div>
+    <div class="tt-sub">${esc(v.s)}</div>
+    ${bt?`<div class="tt-easy">🔰 <b>쉬운 말로</b>&nbsp;&nbsp;${esc(bt)}</div>`:""}
+    <div class="tt-detail">${nl2br(v.f)}</div>
+    <span class="tt-goto" onclick="closeTip();go({v:'glossary',sq:'${esc(termName)}',gf:'all',df:0})">📖 용어 사전에서 자세히 보기 →</span>
+  `;
+  ov.style.display="block";
+  tip.classList.add("show");
+}
+function closeTip(){
+  document.getElementById("termTip").classList.remove("show");
+  document.getElementById("ttOverlay").style.display="none";
+}
+
 function linkTerms(text){
-  // 설명 텍스트 안의 용어를 클릭 가능한 링크로 변환
   let html=nl2br(text);
   const termKeys=Object.keys(G).sort((a,b)=>b.length-a.length);
+  const holders=[];
   termKeys.forEach(tk=>{
     const escaped=esc(tk).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const regex=new RegExp('(?<![\\w가-힣])'+escaped+'(?![\\w가-힣])','g');
-    html=html.replace(regex,`<span style="color:var(--ac);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:pointer" onclick="event.stopPropagation();go({v:'glossary',sq:'${esc(tk)}',gf:'all',df:0})">${esc(tk)}</span>`);
+    html=html.replace(regex,()=>{
+      const idx=holders.length;
+      holders.push(`<span class="tt-word" onclick="event.stopPropagation();showTip('${tk.replace(/'/g,"\\'")}')">${esc(tk)}</span>`);
+      return `\x00PH${idx}\x00`;
+    });
   });
+  holders.forEach((h,i)=>{html=html.replace(`\x00PH${i}\x00`,h);});
   return html;
 }
 
@@ -507,7 +556,7 @@ function render(){
         `:`
           <div style="font-size:13px;font-weight:600;color:var(--ac);margin-bottom:10px">${esc(ck)}</div>
           ${BT[ck]?`<div style="font-size:11.5px;color:#86efac;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);padding:6px 10px;border-radius:6px;margin-bottom:10px;line-height:1.6;text-align:left"><b>🔰</b> ${esc(BT[ck])}</div>`:""}
-          <div style="font-size:12px;line-height:1.8;color:var(--td);white-space:pre-line;text-align:left;max-height:50vh;overflow-y:auto">${nl2br(cv.f)}</div>
+          <div style="font-size:12px;line-height:1.8;color:var(--td);white-space:pre-line;text-align:left;max-height:50vh;overflow-y:auto">${linkTerms(cv.f)}</div>
         `}
       </div>
     </div>
@@ -563,7 +612,7 @@ function render(){
       tabContent=(p.co||[]).map((c,i)=>`<div class="concept">
         <div class="concept-idx">CONCEPT ${i+1} / ${p.co.length}</div>
         <div class="concept-title">${esc(c.t)}</div>
-        <div class="concept-body">${nl2br(c.b)}</div>
+        <div class="concept-body">${linkTerms(c.b)}</div>
       </div>`).join("")||'<div class="empty">이론 설명이 준비 중입니다</div>';
     }else{
       // Quiz tab
