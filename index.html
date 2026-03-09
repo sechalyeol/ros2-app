@@ -119,6 +119,88 @@ code{font-family:'SF Mono','Menlo',monospace}
 #tpOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);z-index:9999;display:none;align-items:flex-end;justify-content:center}
 #tpOverlay.open{display:flex}
 #tpBox{background:#111827;border:1px solid #1e293b;border-radius:16px 16px 0 0;width:100%;max-width:720px;max-height:75vh;overflow-y:auto;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0));-webkit-overflow-scrolling:touch}
+
+/* ── PC 화면 가독성 개선 ── */
+@media (min-width:768px){
+  html{font-size:16px}
+  body{scrollbar-width:thin;scrollbar-color:#1e293b #0b0f19}
+  ::-webkit-scrollbar{width:8px;display:block}
+  ::-webkit-scrollbar-track{background:#0b0f19}
+  ::-webkit-scrollbar-thumb{background:#1e293b;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#334155}
+
+  .hdr-in{padding:28px 24px 22px}
+  .content{padding:18px 24px 80px}
+  .topbar{padding:12px 24px}
+  .tabs{padding:0 20px}
+
+  /* 글씨 크기 확대 */
+  .btn-back{font-size:14px;padding:8px 14px}
+  .btn-tag{font-size:13px;padding:7px 14px}
+  .btn-pill{font-size:15px;padding:10px 20px}
+  .card{padding:16px 18px;margin-bottom:10px}
+  .tc-name{font-size:16px}
+  .tc-short{font-size:13px}
+  .tc-detail{font-size:14px;line-height:1.95}
+  .tc-badge{font-size:11px;padding:2px 7px}
+  .tc-ref{font-size:12px;padding:2px 8px}
+  .tc-arrow{font-size:12px}
+  .concept{padding:20px 22px;margin-bottom:18px}
+  .concept-idx{font-size:11px}
+  .concept-title{font-size:18px}
+  .concept-body{font-size:14px;line-height:2}
+  .quiz-opt{font-size:14px;padding:12px 16px;margin-bottom:8px}
+  .fc-card{min-height:300px;padding:32px 28px}
+  .tbl{font-size:13px}
+  .tbl th{padding:8px 12px}
+  .tbl td{padding:8px 12px}
+  .cheat-row{font-size:13px}
+  .cheat-cmd{padding:9px 14px}
+  .cheat-desc{padding:9px 14px}
+  .tool-label{font-size:13px}
+  .tool-sub{font-size:11px}
+  .tool-btn{padding:16px 14px}
+  .search{font-size:15px;padding:11px 14px}
+  .tag-sm{font-size:11px;padding:2px 7px}
+  .api-input{font-size:14px;padding:9px 12px}
+  .api-save{font-size:13px;padding:9px 18px}
+  .api-hint{font-size:12px}
+  .filter-row{gap:6px;margin-bottom:12px}
+  .empty{font-size:15px}
+
+  /* 색상 대비 강화 — 어두운 텍스트 밝게 */
+  .btn-back{color:#cbd5e1}
+  .btn-tag{color:#94a3b8}
+  .btn-tag.on{color:#67e8f9}
+  .tc-short{color:#b8c5d4}
+  .tc-detail{color:#b8c5d4}
+  .concept-body{color:#b8c5d4}
+  .quiz-opt{color:#b8c5d4}
+  .tbl td{color:#b8c5d4}
+  .cheat-desc{color:#b8c5d4}
+  .tool-sub{color:#94a3b8}
+  .tag-sm{color:#94a3b8}
+  .api-hint{color:#94a3b8}
+
+  /* 버튼 hover 효과 (PC에서 마우스 사용) */
+  .card:hover{border-color:#0e7490;background:#131d2e}
+  .btn-tag:hover{border-color:#334155;color:#cbd5e1;background:rgba(255,255,255,0.03)}
+  .btn-back:hover{border-color:#334155;color:#e2e8f0}
+  .quiz-opt:hover{border-color:#334155;background:#131d2e}
+  .tool-btn:hover{border-color:#0e7490;background:#131d2e}
+  .tc-ref:hover{background:rgba(6,182,212,0.2)}
+  .api-save:hover{background:#0891b2}
+
+  /* 팝업 PC 스타일 */
+  #tpOverlay{align-items:center}
+  #tpBox{border-radius:16px;max-height:80vh;max-width:640px;padding:28px 24px 28px}
+}
+
+/* 큰 모니터 추가 대응 */
+@media (min-width:1200px){
+  .content{max-width:800px}
+  .hdr-in{max-width:800px}
+}
 </style>
 
 </head>
